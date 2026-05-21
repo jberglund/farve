@@ -1,45 +1,38 @@
-import Color from "colorjs.io";
 import { html, render } from "lit-html";
-import { live } from "lit-html/directives/live.js";
 import { store } from "../state/store";
-import { STEPS, deriveSwatches, originToHex, type Step } from "../state";
-import type { State } from "../state/types";
-import { maxChroma } from "../color-utils";
-import GamutChecker from "./gamut-checker";
+import { STEPS, deriveSwatches, classifyGamut, maxInGamutChroma, type Step } from "../state";
+import type { State, PaletteConfig } from "../state/types";
+import "./gamut-checker";
 import "./step-slider";
+import "./palette-origin";
 
 /**
- * A single palette: color input, swatches, and per-step chroma sliders.
+ * A single palette: origin editor, swatches, per-step chroma sliders, and
+ * clone / remove actions.
  *
- * @attr palette-id     - The palette key in the store ("p1", "p2", etc.)
- * @attr ceiling-gamut  - Gamut used for the slider danger-zone ceiling.
- *                        One of "srgb", "p3", or "rec2020". Default: "p3".
+ * @attr palette-id - The palette key in the store ("p1", "p2", etc.)
+ *
+ * @fires palette-clone - { paletteId: string, config: PaletteConfig }
+ * @fires palette-remove - { paletteId: string }
  */
 class PalettePanel extends HTMLElement {
   static get observedAttributes() {
-    return ["palette-id", "ceiling-gamut"];
+    return ["palette-id"];
   }
 
   #paletteId = "p1";
-  #ceilingGamut = "p3";
   #unsub: (() => void) | null = null;
 
   connectedCallback() {
     this.#paletteId = this.getAttribute("palette-id") ?? "p1";
     this.addEventListener("step-change", this.#onStepChange);
+    this.addEventListener("origin-change", this.#onOriginChange);
     this.#render();
     this.#unsub = store.subscribe(this.#onStoreChange);
   }
 
   disconnectedCallback() {
     this.#unsub?.();
-  }
-
-  attributeChangedCallback(name: string, _old: string, newValue: string) {
-    if (name === "ceiling-gamut" && newValue) {
-      this.#ceilingGamut = newValue;
-      this.#onStoreChange(store.getState());
-    }
   }
 
   // -----------------------------------------------------------------------
@@ -51,45 +44,62 @@ class PalettePanel extends HTMLElement {
     const palette = state.palettes[this.#paletteId];
     if (!palette) return;
 
-    const hex = originToHex(palette.origin);
+    const { maxChroma: sliderMax, ceilingGamut } = state.settings;
+    const paletteCount = Object.keys(state.palettes).length;
+    const swatches = deriveSwatches(state, this.#paletteId);
 
     render(
       html`
         <section class="the-grid">
           <div class="the-grid__configuration palette-origin">
-            <label for="origin-${this.#paletteId}" hidden>Origin color</label>
-            <input
-              type="color"
-              .value=${live(hex)}
-              id="origin-${this.#paletteId}"
-              name="origin"
-              @input=${this.#onColorInput}
-            />
+            <palette-origin
+              palette-id="${this.#paletteId}"
+              l="${palette.origin.l}"
+              c="${palette.origin.c}"
+              h="${palette.origin.h}"
+            ></palette-origin>
+            <div class="palette-actions">
+              <button class="button" title="Clone palette" @click=${this.#onCloneClick}>
+                <span class="icon">⧉</span>
+                Clone
+              </button>
+              <button
+                class="button"
+                title="Remove palette"
+                ?disabled=${paletteCount <= 1}
+                @click=${this.#onRemoveClick}
+              >
+                <span class="icon">×</span>
+                Remove
+              </button>
+            </div>
           </div>
           <div class="the-grid__steps">
             <div class="palette-grid" data-palette-grid>
-              ${STEPS.map(
-                (step) => html`
-                  <div class="palette-swatch" style="background-color: var(--swatch-${step})">
-                    <span hidden class="swatch-label">${step}</span>
+              ${swatches.map((swatch) => {
+                const gamut = classifyGamut(swatch.l, swatch.c, swatch.h);
+                return html`
+                  <div class="palette-swatch" style="background-color: ${swatch.css}">
+                    <span hidden class="swatch-label">${swatch.step}</span>
                     <gamut-checker
+                      color-gamut="${gamut}"
                       target-strategy="closest"
                       target=".palette-swatch"
                     ></gamut-checker>
                   </div>
-                `,
-              )}
+                `;
+              })}
             </div>
             <div class="palette-grid" data-editor="chroma">
               ${STEPS.map((step) => {
                 const L = state.lightness[step];
-                const ceiling = maxChroma(L, palette.origin.h, this.#ceilingGamut);
+                const ceiling = maxInGamutChroma(L, palette.origin.h, ceilingGamut);
                 return html`
                   <step-slider
                     step-key="${step}"
                     value="${palette.chroma[step]}"
                     min="0"
-                    max="0.4"
+                    max="${sliderMax}"
                     ceiling="${ceiling}"
                     orient="vertical"
                   ></step-slider>
@@ -101,31 +111,15 @@ class PalettePanel extends HTMLElement {
       `,
       this,
     );
-
-    // Prime CSS variables with current store values
-    this.#updateSwatches(state);
   }
 
   // -----------------------------------------------------------------------
   // Store subscription
   // -----------------------------------------------------------------------
 
-  #onStoreChange = (state: State) => {
+  #onStoreChange = (_state: State) => {
     this.#render();
-    this.#updateSwatches(state);
   };
-
-  #updateSwatches(state: State) {
-    const swatches = deriveSwatches(state, this.#paletteId);
-    for (const s of swatches) {
-      this.style.setProperty(`--swatch-${s.step}`, s.css);
-    }
-    // Gamut checkers observe style *attributes*, not computed styles,
-    // so nudging them is necessary after a CSS variable change.
-    for (const gc of this.querySelectorAll<GamutChecker>("gamut-checker")) {
-      gc.checkColor();
-    }
-  }
 
   // -----------------------------------------------------------------------
   // Event handlers
@@ -136,16 +130,41 @@ class PalettePanel extends HTMLElement {
     store.setChroma(this.#paletteId, step, value);
   };
 
-  #onColorInput = () => {
-    const input = this.querySelector<HTMLInputElement>("input[type='color']");
-    if (!input) return;
-    try {
-      const color = new Color(input.value);
-      const [l = 0.5, c = 0.15, h = 264] = color.oklch as number[];
-      store.setOrigin(this.#paletteId, l, c, h);
-    } catch {
-      // Unparseable color — ignore
-    }
+  #onOriginChange = (e: Event) => {
+    const { l, c, h } = (e as CustomEvent<{ l: number; c: number; h: number }>).detail;
+    store.setOrigin(this.#paletteId, l, c, h);
+  };
+
+  #onCloneClick = () => {
+    const state = store.getState();
+    const palette = state.palettes[this.#paletteId];
+    if (!palette) return;
+
+    const cloneConfig: PaletteConfig = {
+      chroma: { ...palette.chroma },
+      origin: {
+        ...palette.origin,
+        h: (palette.origin.h + 30) % 360,
+      },
+    };
+
+    this.dispatchEvent(
+      new CustomEvent("palette-clone", {
+        detail: { paletteId: this.#paletteId, config: cloneConfig },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  };
+
+  #onRemoveClick = () => {
+    this.dispatchEvent(
+      new CustomEvent("palette-remove", {
+        detail: { paletteId: this.#paletteId },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   };
 }
 

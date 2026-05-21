@@ -68,6 +68,18 @@ class StepSlider extends HTMLElement {
       if (range && document.activeElement !== range) range.value = newValue;
       if (number && document.activeElement !== number) number.value = newValue;
     }
+    if (name === "min" || name === "max") {
+      const range = this.querySelector<HTMLInputElement>("input[type='range']");
+      const number = this.querySelector<HTMLInputElement>("input[type='number']");
+      if (range) range.setAttribute(name, newValue);
+      if (number) number.setAttribute(name, newValue);
+      // ceiling position depends on max, so recalculate
+      const ceiling = this.getAttribute("ceiling");
+      if (ceiling !== null) {
+        const maxVal = parseFloat(this.getAttribute("max") ?? "1");
+        this.#setCeilingPos(parseFloat(ceiling), maxVal);
+      }
+    }
     if (name === "show-label") {
       const span = this.querySelector<HTMLSpanElement>("span");
       if (span) span.hidden = newValue === null;

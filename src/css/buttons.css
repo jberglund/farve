@@ -1,0 +1,39 @@
+/* ------------------------------------------------------------------ */
+/* Buttons                                                            */
+/* ------------------------------------------------------------------ */
+
+.button {
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f8f8f8;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.button:hover {
+  background: #ececec;
+}
+
+.button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* --- Variants --- */
+
+.button--primary {
+  font-weight: 600;
+}
+
+.button[data-size="small"] {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.35rem;
+  border-radius: 3px;
+}

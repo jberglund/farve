@@ -1,4 +1,5 @@
-import { type State, STEPS, type Step } from "./types";
+import Color from "colorjs.io";
+import { type State, STEPS, type Step, type Curve } from "./types";
 
 export interface Swatch {
   step: Step;
@@ -8,6 +9,10 @@ export interface Swatch {
   c: number;
   h: number;
 }
+
+export type GamutLabel = "srgb" | "p3" | "rec2020" | "rec2020+";
+
+const GAMUTS = ["srgb", "p3", "rec2020"] as const;
 
 /**
  * Derive all swatches for a palette from the current state.
@@ -32,34 +37,113 @@ export function deriveSwatches(state: State, paletteId: string): Swatch[] {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Chroma curve derivation
+// ---------------------------------------------------------------------------
+
+/** Gamut used as the ceiling when deriving chroma curves. */
+const DERIVATION_GAMUT = "srgb";
+
+/**
+ * Derive a chroma curve that respects the gamut boundary for the origin's hue.
+ *
+ * Instead of scaling a fixed template uniformly (which ignores how different
+ * hues have wildly different chroma ceilings across lightness), we compute a
+ * "fill ratio" — how saturated the origin is relative to the maximum possible
+ * at its (L,H) — and apply that same ratio against the gamut ceiling at every
+ * step. This naturally produces:
+ *
+ * - Blues:  high chroma at low L, tapering hard at high L
+ * - Reds:   peak at mid L, tapering at both ends
+ * - Yellows: peak at high L, low at the dark end
+ *
+ * @param origin     The origin color (all three of `.l`, `.c`, `.h` are used)
+ * @param lightness  Per-step lightness values (e.g. state.lightness)
+ */
+export function deriveChromaCurve(
+  origin: { l: number; c: number; h: number },
+  lightness: Curve,
+): Curve {
+  const maxOriginC = maxInGamutChroma(origin.l, origin.h, DERIVATION_GAMUT);
+  const fillRatio = maxOriginC > 0 ? Math.min(origin.c / maxOriginC, 1.0) : 0;
+
+  const result: Record<string, number> = {};
+  for (const step of STEPS) {
+    const l = lightness[step];
+    const ceiling = maxInGamutChroma(l, origin.h, DERIVATION_GAMUT);
+    result[step] = round(ceiling * fillRatio);
+  }
+  return result as Curve;
+}
+
 /**
  * Reconstruct a hex string from the origin LCH for hydrating a color input.
  */
 export function originToHex(origin: { l: number; c: number; h: number }): string {
-  // We want to avoid pulling in color.js for this one conversion,
-  // so we lean on the browser's CSS parsing. Create a temporary element,
-  // set its color, and read the computed hex.
-  //
-  // This is a pragmatic shortcut — if you prefer color.js, swap this out.
-  const div = document.createElement("div");
-  div.style.color = `oklch(${origin.l} ${origin.c} ${origin.h})`;
-  document.body.appendChild(div);
-  const hex = getComputedStyle(div).color;
-  div.remove();
-
-  // getComputedStyle returns something like "rgb(76, 127, 242)" or "#4c7ff2"
-  // depending on the browser. Normalize to hex.
-  if (hex.startsWith("#")) return hex;
-  return rgbToHex(hex);
+  const color = new Color("oklch", [origin.l, origin.c, origin.h]);
+  return color.to("srgb").toString({ format: "hex" });
 }
 
 function round(n: number): number {
-  return Math.round(n * 10000) / 10000;
+  return Math.round(n * 1000) / 1000;
 }
 
-function rgbToHex(rgb: string): string {
-  const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if (!match) return "#000000";
-  const [, r, g, b] = match;
-  return "#" + [r, g, b].map((x) => Number(x).toString(16).padStart(2, "0")).join("");
+// ---------------------------------------------------------------------------
+// Gamut helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Classify which gamut a given OKLCH color falls into.
+ * Returns the narrowest gamut that contains the color.
+ * Pure function — no side effects.
+ */
+export function classifyGamut(l: number, c: number, h: number): GamutLabel {
+  const color = new Color("oklch", [l, c, h]);
+  for (const gamut of GAMUTS) {
+    try {
+      if (color.to(gamut).inGamut()) {
+        return gamut;
+      }
+    } catch {
+      // Conversion failed for this space — try the next
+    }
+  }
+  return "rec2020+";
+}
+
+/**
+ * Binary search for the maximum chroma at a given L,H that stays within
+ * the specified gamut. Used to position the ceiling/danger-zone on sliders.
+ *
+ * Uses the same `inGamut()` check as `classifyGamut` so the ceiling line
+ * and the gamut badge are always consistent.
+ */
+export function maxInGamutChroma(l: number, h: number, gamut: string): number {
+  let lo = 0;
+  let hi = 0.6; // practical upper bound for OKLCH chroma
+
+  // If even hi is in gamut, the danger zone is beyond the slider — return hi
+  try {
+    if (new Color("oklch", [l, hi, h]).to(gamut).inGamut()) {
+      return hi;
+    }
+  } catch {
+    // fall through to binary search
+  }
+
+  // 16 iterations on [0, 0.6] → precision ~0.00001 (well below slider step 0.001)
+  for (let i = 0; i < 16; i++) {
+    const mid = (lo + hi) / 2;
+    try {
+      if (new Color("oklch", [l, mid, h]).to(gamut).inGamut()) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    } catch {
+      hi = mid;
+    }
+  }
+
+  return round(lo);
 }

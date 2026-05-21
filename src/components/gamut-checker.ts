@@ -28,6 +28,9 @@ class GamutChecker extends HTMLElement {
   }
 
   connectedCallback() {
+    // If the parent already set color-gamut, skip DOM-based auto-detection.
+    if (this.hasAttribute("color-gamut")) return;
+
     this.resolveTarget();
     this.setupObserver();
     this.checkColor();

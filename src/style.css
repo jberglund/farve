@@ -1,4 +1,6 @@
+@import "./css/reset.css";
 @import "./css/form-controls.css";
+@import "./css/buttons.css";
 
 *,
 *::before,
@@ -24,9 +26,23 @@
     "Helvetica Neue",
     sans-serif;
 }
+body {
+}
+
+#app {
+  display: grid;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+#palettes {
+  display: grid;
+  gap: 3rem;
+}
 
 .the-grid {
   display: grid;
+  gap: 1rem;
   grid-template-columns: 100px 1fr;
   grid-template-areas: "configuration steps";
 }
@@ -53,7 +69,44 @@
 
 .palette-origin {
   grid-area: configuration;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
+
+/* Origin swatch — clickable preview that opens the hidden color picker */
+.origin-swatch {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.origin-text {
+  font: inherit;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  width: 100%;
+}
+
+.origin-oklch {
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: #555;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.origin-oklch__val {
+  font-weight: 600;
+  color: #222;
+}
+
 .palette-swatch {
   aspect-ratio: 2/3;
 }
@@ -65,10 +118,63 @@ gamut-checker {
   background-color: transparent;
 }
 
+gamut-checker[color-gamut="rec2020"],
 gamut-checker[color-gamut="rec2020+"] {
   background: repeating-linear-gradient(
     -61deg,
     oklch(0.59 0.02 0.88 / 0.26) 0 1px,
     transparent 0px 4px
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* Toolbar                                                            */
+/* ------------------------------------------------------------------ */
+
+.toolbar-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.toolbar-setting {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+}
+
+.toolbar-setting input[type="range"] {
+  width: 80px;
+  height: auto;
+  writing-mode: horizontal-tb;
+  direction: ltr;
+}
+
+.toolbar-setting select {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #f8f8f8;
+}
+
+.toolbar-setting-value {
+  font-variant-numeric: tabular-nums;
+  min-width: 2.2em;
+}
+
+/* ------------------------------------------------------------------ */
+/* Palette actions (clone / remove buttons)                           */
+/* ------------------------------------------------------------------ */
+
+.palette-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
 }

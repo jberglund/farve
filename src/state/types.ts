@@ -40,8 +40,17 @@ export interface PaletteConfig {
   origin: Origin;
 }
 
+/** Global app settings that affect all palettes. */
+export interface AppSettings {
+  /** Slider max for chroma step-sliders. */
+  maxChroma: number;
+  /** Gamut used for the ceiling / danger-zone on chroma sliders. */
+  ceilingGamut: "srgb" | "p3" | "rec2020";
+}
+
 /** The full application state. */
 export interface State {
   lightness: Curve;
   palettes: Record<string, PaletteConfig>;
+  settings: AppSettings;
 }

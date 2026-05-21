@@ -27,6 +27,7 @@ class LightnessEditor extends HTMLElement {
     render(
       html`
         <section class="lightness-section the-grid">
+          <div class="the-grid__origin">Lightness controls</div>
           <div class="the-grid__steps palette-grid" data-editor="lightness">
             ${STEPS.map(
               (step) =>

@@ -1,4 +1,4 @@
-import { type State, STEPS, type Curve, type PaletteConfig } from "./types";
+import { type State, type AppSettings, STEPS, type Curve, type PaletteConfig } from "./types";
 import { store, type Store } from "./store";
 
 /**
@@ -34,7 +34,9 @@ export function parseSearchParams(): State | null {
   // Require at least one palette
   if (Object.keys(palettes).length === 0) return null;
 
-  return { lightness, palettes };
+  const settings = parseSettings(params);
+
+  return { lightness, palettes, settings };
 }
 
 /**
@@ -49,6 +51,10 @@ export function syncToUrl(state: State): void {
     parts.push(`${id}=${curveToString(palette.chroma)}`);
     parts.push(`${id}-origin=${palette.origin.l},${palette.origin.c},${palette.origin.h}`);
   }
+
+  // Settings
+  parts.push(`max-chroma=${state.settings.maxChroma}`);
+  parts.push(`ceiling=${state.settings.ceilingGamut}`);
 
   const qs = parts.join("&");
   const url = `${location.pathname}?${qs}`;
@@ -93,6 +99,16 @@ function parseOrigin(raw: string): { l: number; c: number; h: number } {
     l: parts[0] ?? 0.5,
     c: parts[1] ?? 0.15,
     h: parts[2] ?? 264,
+  };
+}
+
+function parseSettings(params: URLSearchParams): AppSettings {
+  const maxChromaRaw = params.get("max-chroma");
+  const ceilingRaw = params.get("ceiling");
+  return {
+    maxChroma: maxChromaRaw ? parseFloat(maxChromaRaw) : 0.35,
+    ceilingGamut:
+      ceilingRaw === "srgb" || ceilingRaw === "p3" || ceilingRaw === "rec2020" ? ceilingRaw : "p3",
   };
 }
 

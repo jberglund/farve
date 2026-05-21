@@ -1,4 +1,12 @@
-import { type State, type Step, type Curve, type PaletteConfig, type Origin } from "./types";
+import {
+  type State,
+  type Step,
+  type Curve,
+  type PaletteConfig,
+  type Origin,
+  type AppSettings,
+} from "./types";
+import { deriveChromaCurve } from "./derive";
 
 // --- sensible defaults for a 20-step lightness curve ---
 const DEFAULT_LIGHTNESS: Curve = {
@@ -25,7 +33,7 @@ const DEFAULT_LIGHTNESS: Curve = {
 };
 
 // --- sensible defaults for a 20-step chroma curve ---
-const DEFAULT_CHROMA: Curve = {
+export const DEFAULT_CHROMA: Curve = {
   "0": 0.02,
   "50": 0.04,
   "100": 0.06,
@@ -77,6 +85,10 @@ export class Store {
     return this.#state;
   }
 
+  getSettings(): AppSettings {
+    return this.#state.settings;
+  }
+
   // --- writers ---
 
   setLightness(step: Step, value: number): void {
@@ -90,13 +102,30 @@ export class Store {
   }
 
   setOrigin(paletteId: string, l: number, c: number, h: number): void {
-    this.#state.palettes[paletteId].origin = { l, c, h };
+    const origin = { l, c, h };
+    this.#state.palettes[paletteId].origin = origin;
+    this.#state.palettes[paletteId].chroma = deriveChromaCurve(origin, this.#state.lightness);
     this.#scheduleNotify();
   }
 
   addPalette(id: string, config: PaletteConfig): void {
     this.#state.palettes[id] = config;
     this.#notify();
+  }
+
+  removePalette(id: string): void {
+    delete this.#state.palettes[id];
+    this.#notify();
+  }
+
+  setMaxChroma(value: number): void {
+    this.#state.settings.maxChroma = value;
+    this.#scheduleNotify();
+  }
+
+  setCeilingGamut(value: AppSettings["ceilingGamut"]): void {
+    this.#state.settings.ceilingGamut = value;
+    this.#scheduleNotify();
   }
 
   /** Replace the entire state — used when hydrating from URL. */
@@ -151,6 +180,10 @@ export class Store {
           chroma: { ...DEFAULT_CHROMA },
           origin: { l: 0.62, c: 0.18, h: 264 },
         },
+      },
+      settings: {
+        maxChroma: 0.35,
+        ceilingGamut: "p3",
       },
     });
   }

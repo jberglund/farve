@@ -32,5 +32,3 @@ const palettes = [
 ]
 
 ```
-
-We can
