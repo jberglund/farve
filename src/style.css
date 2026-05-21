@@ -1,0 +1,74 @@
+@import "./css/form-controls.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
+}
+
+.the-grid {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  grid-template-areas: "configuration steps";
+}
+
+.the-grid__configuration {
+  grid-area: configuration;
+}
+
+.the-grid__steps {
+  grid-area: steps;
+}
+
+.palette-grid {
+  display: grid;
+  grid-auto-columns: minmax(max-content, 1fr);
+  grid-auto-flow: column;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.palette-origin {
+  grid-area: configuration;
+}
+.palette-swatch {
+  aspect-ratio: 2/3;
+}
+
+gamut-checker {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+}
+
+gamut-checker[color-gamut="rec2020+"] {
+  background: repeating-linear-gradient(
+    -61deg,
+    oklch(0.59 0.02 0.88 / 0.26) 0 1px,
+    transparent 0px 4px
+  );
+}

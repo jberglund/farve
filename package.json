@@ -1,0 +1,22 @@
+{
+  "name": "farve",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "tsc && vp build",
+    "preview": "vp preview",
+    "prepare": "vp config"
+  },
+  "dependencies": {
+    "colorjs.io": "^0.6.1",
+    "lit-html": "^3.3.3"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "packageManager": "pnpm@11.1.1"
+}
