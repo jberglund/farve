@@ -9,8 +9,16 @@ import {
   DEFAULT_START_L,
   DEFAULT_END_L,
 } from "../state/bezier";
+import {
+  lightnessHeadingTip,
+  presetTip,
+  bezierEditorTip,
+  startLightnessTip,
+  endLightnessTip,
+} from "./tool-tip-content";
 import "./step-slider";
 import "./bezier-editor";
+import "./number-slider";
 
 /**
  * Lightness editor with a bezier curve control, start/end lightness inputs,
@@ -46,12 +54,33 @@ class LightnessEditor extends HTMLElement {
       html`
         <section class="lightness-section the-grid">
           <div class="the-grid__origin">
-            <div class="stack" style="gap: 0.5rem;">
-              <div class="stack-horizontal" style="gap: 0.35rem; align-items: center;">
-                <span>Lightness</span>
-                <button class="button" data-size="small" @click=${this.#onReset}>Reset</button>
-              </div>
+            <div class="stack gap-s">
+              <h3 class=" gap-2xs">
+                Lightness<tool-tip class="ml-xs">${lightnessHeadingTip}</tool-tip>
+              </h3>
 
+              <div class="stack ">
+                <div class="stack-horizontal">
+                  <label class="fs-s" for="preset">Preset</label>
+                  <tool-tip class="ml-2xs">${presetTip}</tool-tip>
+                </div>
+                <div class="stack-horizontal gap-xs">
+                  <select id="preset" @change=${this.#onPresetChange} class="flex-1">
+                    <option value="" ?selected=${this.#activePresetKey === null}>Custom…</option>
+                    ${BEZIER_PRESETS.map(
+                      (p) => html`
+                        <option value="${p.key}" ?selected=${this.#activePresetKey === p.key}>
+                          ${p.label}
+                        </option>
+                      `,
+                    )}
+                  </select>
+                  <button class="button" data-size="small" @click=${this.#onReset}>Reset</button>
+                </div>
+              </div>
+              <div>
+                <span>Curve<tool-tip>${bezierEditorTip}</tool-tip></span>
+              </div>
               <bezier-editor
                 p1x="${this.#bezier.p1x}"
                 p1y="${this.#bezier.p1y}"
@@ -59,45 +88,40 @@ class LightnessEditor extends HTMLElement {
                 p2y="${this.#bezier.p2y}"
               ></bezier-editor>
 
-              <div class="stack-horizontal" style="gap: 0.35rem;">
-                <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;">
-                  Start
-                  <input
-                    class="origin-text"
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.001"
-                    .value="${this.#startL}"
-                    @input=${this.#onStartChange}
-                    style="width:5.5ch"
-                  />
-                </label>
-                <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;">
-                  End
-                  <input
-                    class="origin-text"
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.001"
-                    .value="${this.#endL}"
-                    @input=${this.#onEndChange}
-                    style="width:5.5ch"
-                  />
-                </label>
+              <div class="stack gap-2xs">
+                <div class="stack-horizontal items-center">
+                  <span class="fs-s">Start</span>
+                  <tool-tip class="ml-2xs">${startLightnessTip}</tool-tip>
+                  <number-slider class="ml-auto">
+                    <input
+                      class="origin-text border-default t-right"
+                      style="width:9ch"
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.001"
+                      .value="${this.#startL}"
+                      @input=${this.#onStartChange}
+                    />
+                  </number-slider>
+                </div>
+                <div class="stack-horizontal items-center">
+                  <span class="fs-s">End</span>
+                  <tool-tip class="ml-2xs">${endLightnessTip}</tool-tip>
+                  <number-slider class="ml-auto">
+                    <input
+                      class="origin-text border-default t-right"
+                      style="width:9ch"
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.001"
+                      .value="${this.#endL}"
+                      @input=${this.#onEndChange}
+                    />
+                  </number-slider>
+                </div>
               </div>
-
-              <select @change=${this.#onPresetChange}>
-                <option value="" ?selected=${this.#activePresetKey === null}>Custom…</option>
-                ${BEZIER_PRESETS.map(
-                  (p) => html`
-                    <option value="${p.key}" ?selected=${this.#activePresetKey === p.key}>
-                      ${p.label}
-                    </option>
-                  `,
-                )}
-              </select>
             </div>
           </div>
           <div class="the-grid__steps palette-grid" data-editor="lightness">

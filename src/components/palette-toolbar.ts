@@ -2,6 +2,9 @@ import { html, render } from "lit-html";
 import { live } from "lit-html/directives/live.js";
 import { store } from "../state/store";
 import { deriveChromaCurve } from "../state/derive";
+import "./number-slider";
+import { openExportDialog } from "./export-dialog";
+import { maxChromaTip, ceilingTip, linkedEditingTip, spreadTip } from "./tool-tip-content";
 import type { State, PaletteConfig, AppSettings } from "../state/types";
 
 const CEILING_OPTIONS = [
@@ -36,21 +39,28 @@ class PaletteToolbar extends HTMLElement {
       html`
         <div class="stack-horizontal justify-end gap-m items-stretch py-xl">
           <button class="button button--primary" @click=${this.#addPalette}>+ Add palette</button>
+          <button class="button" @click=${openExportDialog}>Export</button>
 
-          <label class="toolbar-setting">
-            <span>Max chroma</span>
-            <input
-              type="number"
-              min="0.2"
-              max="0.4"
-              step="0.01"
-              .value=${live(String(settings.maxChroma))}
-              @input=${this.#onMaxChromaInput}
-            />
+          <label
+            class="toolbar-setting inline-flex items-center gap-m fs-s surface-raised border-default"
+          >
+            <span>Max chroma<tool-tip>${maxChromaTip}</tool-tip></span>
+            <number-slider>
+              <input
+                type="number"
+                min="0.2"
+                max="0.4"
+                step="0.01"
+                .value=${live(String(settings.maxChroma))}
+                @input=${this.#onMaxChromaInput}
+              />
+            </number-slider>
           </label>
 
-          <label class="toolbar-setting">
-            <span>Ceiling</span>
+          <label
+            class="toolbar-setting inline-flex items-center gap-m fs-s surface-raised border-default"
+          >
+            <span>Ceiling<tool-tip>${ceilingTip}</tool-tip></span>
             <select .value=${settings.ceilingGamut} @change=${this.#onCeilingChange}>
               ${CEILING_OPTIONS.map(
                 (opt) => html`
@@ -62,26 +72,34 @@ class PaletteToolbar extends HTMLElement {
             </select>
           </label>
 
-          <label class="toolbar-setting" hotkey-key="l" hotkey-restore-focus>
+          <label
+            class="toolbar-setting inline-flex items-center gap-m fs-s surface-raised border-default"
+            hotkey-key="l"
+            hotkey-restore-focus
+          >
             <input
               type="checkbox"
               .checked=${settings.propagateChanges}
               @change=${this.#onPropagateToggle}
             />
-            <span>Linked editing</span>
+            <span>Linked editing<tool-tip>${linkedEditingTip}</tool-tip></span>
           </label>
 
-          <label class="toolbar-setting">
-            <span>Spread</span>
-            <input
-              type="number"
-              min="0.1"
-              max="0.9"
-              step="0.05"
-              .value=${live(String(settings.propagateDecay))}
-              ?disabled=${!settings.propagateChanges}
-              @input=${this.#onPropagateDecayInput}
-            />
+          <label
+            class="toolbar-setting inline-flex items-center gap-m fs-s surface-raised border-default"
+          >
+            <span>Spread<tool-tip>${spreadTip}</tool-tip></span>
+            <number-slider>
+              <input
+                type="number"
+                min="0.1"
+                max="0.9"
+                step="0.05"
+                .value=${live(String(settings.propagateDecay))}
+                ?disabled=${!settings.propagateChanges}
+                @input=${this.#onPropagateDecayInput}
+              />
+            </number-slider>
           </label>
         </div>
       `,

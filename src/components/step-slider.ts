@@ -31,9 +31,9 @@ class StepSlider extends HTMLElement {
     render(
       html`
         <label class="step-item">
-          <span class="step-label" ?hidden=${!showLabel}>${stepKey}</span>
+          <span class="fs-xs mb-xs" ?hidden=${!showLabel}>${stepKey}</span>
           <input
-            class="step-range"
+            class=" flex-1"
             type="range"
             min="${min}"
             max="${max}"

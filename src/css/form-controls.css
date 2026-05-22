@@ -1,23 +1,24 @@
 input,
 select {
   font: inherit;
-  color: #454545;
+  color: var(--text-high);
   font-size: 0.75rem;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-weigth: var(--font-weight-medium);
 }
 
 input:where([type="text"], [type="number"]) {
   padding: 0.15rem 0.25rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-default);
   border-radius: 3px;
-  background: #f8f8f8;
+  background: var(--surface-raised);
 }
 
 select {
   padding: 0.15rem 0.25rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-default);
   border-radius: 3px;
-  background: #f8f8f8;
+  background: var(--surface-raised);
 }
 
 input[type="range"][orient="vertical"] {
@@ -26,7 +27,7 @@ input[type="range"][orient="vertical"] {
   width: 100%;
 }
 
-:root {
+input[type="range"] {
   --wrapper-height: 30px; /* total clickable area height */
   --thumb-size: 20px;
   --thumb-width: 30px;
@@ -34,16 +35,23 @@ input[type="range"][orient="vertical"] {
   --thumb-color: currentColor;
   --thumb-opacity: 0.5;
   --thumb-radius: 4px;
-  --track-bg: #f7f7f7;
-  --ceiling-bg: transparent;
+  --track-bg: var(--surface-raised);
+}
 
-  position: relative;
-  width: 100%;
-  height: var(--wrapper-height);
+input[type="range"]:hover {
+  --track-bg: var(--surface-raised);
+}
+
+input[type="range"]:focus {
+  outline: none;
 }
 
 /* ===== Input fills the wrapper ===== */
 input[type="range"] {
+  --ceiling-bg: transparent;
+
+  height: var(--wrapper-height);
+
   --ceiling-pos: 100%; /* default: no danger zone */
 
   -webkit-appearance: none;
@@ -59,10 +67,6 @@ input[type="range"] {
   margin: 0;
   cursor: pointer;
   font: inherit; /* prevents squishing in some browsers */
-}
-
-input[type="range"]:focus {
-  outline: none;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -133,8 +137,8 @@ input[type="range"]::-moz-range-track {
   -moz-appearance: textfield;
 }
 
-.step-number::-webkit-inner-spin-button,
-.step-number::-webkit-outer-spin-button {
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }

@@ -1,3 +1,12 @@
+# Commands
+
+Instead of `pnpm`, use `vp`. Example: `vp run build`
+
+- `vp run build` – typecheck and build
+- `vp test --verbose` – To run all tests
+- `vp test run PATH_TO_FILE --reporter=verbose`
+-
+
 # Tone and rules.
 
 Be direct, friendly and honest to a fault. We're friends, and friends don't let friends write code that could do with one more pass to get the details right.

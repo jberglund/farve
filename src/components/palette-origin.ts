@@ -68,7 +68,7 @@ class PaletteOrigin extends HTMLElement {
         />
         <input
           type="text"
-          class="origin-text"
+          class="origin-text border-default"
           .value=${hex}
           placeholder="#000000"
           aria-label="Origin color value"
@@ -76,18 +76,18 @@ class PaletteOrigin extends HTMLElement {
         />
         </div>
         <div class="">
-          <div class="origin-oklch">
+          <div class="inline-flex gap-xs fs-xs t-tabular text-mid">
             <span> L </span>
-            <span class="origin-oklch__val">${this.#l.toFixed(3)}</span>
+            <span class="t-bold text-high">${this.#l.toFixed(3)}</span>
           </div>
 
-          <div class="origin-oklch">
+          <div class="inline-flex gap-xs fs-xs t-tabular text-mid">
             <span> C </span>
-            <span class="origin-oklch__val">${this.#c.toFixed(3)}</span>
+            <span class="t-bold text-high">${this.#c.toFixed(3)}</span>
           </div>
-          <div class="origin-oklch">
+          <div class="inline-flex gap-xs fs-xs t-tabular text-mid">
             <span> H </span>
-            <span class="origin-oklch__val">${this.#h.toFixed(1)}°</span>
+            <span class="t-bold text-high">${this.#h.toFixed(1)}°</span>
           </div>
           </div>
         </div>

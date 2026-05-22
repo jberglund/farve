@@ -7,9 +7,9 @@
   font-size: 0.8rem;
   line-height: 1;
   padding: 0.25rem 0.6rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-default);
   border-radius: 4px;
-  background: #f8f8f8;
+  background: var(--surface-raised);
   cursor: pointer;
   font-weight: 600;
   display: inline-flex;
@@ -18,7 +18,7 @@
 }
 
 .button:hover {
-  background: #ececec;
+  background: var(--surface-hover);
 }
 
 .button:disabled {

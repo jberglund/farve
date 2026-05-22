@@ -1,0 +1,103 @@
+@layer typography {
+  .fs-xs {
+    font-size: var(--font-size-xs);
+  }
+  .fs-s {
+    font-size: var(--font-size-s);
+  }
+  .fs-m {
+    font-size: var(--font-size-m);
+  }
+  .fs-l {
+    font-size: var(--font-size-l);
+  }
+  .fs-xl {
+    font-size: var(--font-size-xl);
+  }
+  .fs-2xl {
+    font-size: var(--font-size-2xl);
+  }
+  .fs-3xl {
+    font-size: var(--font-size-3xl);
+  }
+  .fs-4xl {
+    font-size: var(--font-size-4xl);
+  }
+
+  .t-regular {
+    font-weight: var(--font-weight-regular);
+  }
+  .t-medium {
+    font-weight: var(--font-weight-medium);
+  }
+  .t-bold {
+    font-weight: var(--font-weight-bold);
+  }
+
+  .t-center {
+    text-align: center;
+  }
+  .t-left {
+    text-align: left;
+  }
+  .t-right {
+    text-align: right;
+  }
+
+  .t-uppercase {
+    text-transform: uppercase;
+  }
+
+  .lh-tight {
+    line-height: 1.1;
+  }
+  .lh-normal {
+    line-height: 1.5;
+  }
+  .lh-relaxed {
+    line-height: 1.7;
+  }
+
+  .t-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.typeset {
+  max-width: 65ch;
+  line-height: 1.7;
+}
+
+/* Vertical rhythm — auto-space all block siblings */
+.typeset > * + * {
+  margin-block-start: 0.75em;
+}
+
+/* Headings need more breathing room above */
+.typeset :is(h2, h3, h4) {
+  margin-block-start: 2em;
+}
+
+/* Except right after h1 — tighter coupling */
+.typeset h1 + :is(h2, h3, h4) {
+  margin-block-start: 1em;
+}
+
+/* Definition lists — term/description pairs */
+.typeset dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--spacing-s) var(--spacing-xl);
+  align-items: baseline;
+}
+
+.typeset dt {
+  grid-column: 1;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.typeset dd {
+  grid-column: 2;
+  margin: 0;
+}

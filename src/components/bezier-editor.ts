@@ -5,24 +5,10 @@ import { cubicBezierPoint } from "../state/bezier";
 // Constants
 // ---------------------------------------------------------------------------
 
-const SIZE = 200;
-const PAD = 20;
-const PW = SIZE - 2 * PAD;
-const PH = SIZE - 2 * PAD;
+const DEFAULT_SIZE = 150;
+const PAD = 10;
 const HANDLE_R = 8;
 const CURVE_STEPS = 60;
-
-// ---------------------------------------------------------------------------
-// Coordinate helpers
-// ---------------------------------------------------------------------------
-
-/** Normalised (0–1) → SVG pixel.  y flips so 0=top (bright), 1=bottom (dark). */
-const toX = (n: number) => PAD + n * PW;
-const toY = (n: number) => PAD + n * PH; // n=0 → top, n=1 → bottom
-
-/** SVG pixel → normalised (0–1). */
-const fromX = (px: number) => Math.max(0, Math.min(1, (px - PAD) / PW));
-const fromY = (py: number) => Math.max(0, Math.min(1, (py - PAD) / PH));
 
 const snap3 = (n: number) => Number(n.toFixed(3));
 
@@ -38,11 +24,12 @@ const snap3 = (n: number) => Number(n.toFixed(3));
  * P1, P2 — draggable shape handles
  *
  * @attr p1x, p1y, p2x, p2y
+ * @attr width, aspect-ratio
  * @fires bezier-change — { p1x, p1y, p2x, p2y }
  */
 class BezierEditor extends HTMLElement {
   static get observedAttributes() {
-    return ["p1x", "p1y", "p2x", "p2y"];
+    return ["p1x", "p1y", "p2x", "p2y", "width", "aspect-ratio"];
   }
 
   #p1x = 0.75;
@@ -51,17 +38,63 @@ class BezierEditor extends HTMLElement {
   #p2y = 0.95;
   #dragging: "p1" | "p2" | null = null;
 
+  // Sizing
+  #width = DEFAULT_SIZE;
+  #height = DEFAULT_SIZE;
+
+  // -------------------------------------------------------------------
+  // Lifecycle
+  // -------------------------------------------------------------------
+
   connectedCallback() {
     this.#readAttrs();
+    this.#resolveSize();
     this.#render();
   }
 
   attributeChangedCallback(name: string, _old: string, newValue: string) {
-    const v = parseFloat(newValue);
-    if (isNaN(v)) return;
-    this.#setField(name, v);
+    if (["p1x", "p1y", "p2x", "p2y"].includes(name)) {
+      const v = parseFloat(newValue);
+      if (isNaN(v)) return;
+      this.#setField(name, v);
+    } else if (["width", "aspect-ratio"].includes(name)) {
+      this.#resolveSize();
+    }
     this.#render();
   }
+
+  // -------------------------------------------------------------------
+  // Sizing
+  // -------------------------------------------------------------------
+
+  #resolveSize() {
+    const w = parseFloat(this.getAttribute("width") ?? "");
+    const ar = parseFloat(this.getAttribute("aspect-ratio") ?? "");
+
+    this.#width = isNaN(w) ? DEFAULT_SIZE : w;
+    this.#height = this.#width * (isNaN(ar) ? 1 : ar);
+  }
+
+  /** Plot-area width (accounting for padding). */
+  get #pw() {
+    return this.#width - 2 * PAD;
+  }
+  /** Plot-area height (accounting for padding). */
+  get #ph() {
+    return this.#height - 2 * PAD;
+  }
+
+  // -------------------------------------------------------------------
+  // Coordinate helpers (instance methods — depend on dynamic #pw / #ph)
+  // -------------------------------------------------------------------
+
+  /** Normalised (0–1) → SVG pixel.  y flips so 0=top, 1=bottom. */
+  #toX = (n: number) => PAD + n * this.#pw;
+  #toY = (n: number) => PAD + n * this.#ph;
+
+  /** SVG pixel → normalised (0–1). */
+  #fromX = (px: number) => Math.max(0, Math.min(1, (px - PAD) / this.#pw));
+  #fromY = (py: number) => Math.max(0, Math.min(1, (py - PAD) / this.#ph));
 
   // -------------------------------------------------------------------
   // Render
@@ -72,6 +105,12 @@ class BezierEditor extends HTMLElement {
     const p1y = this.#p1y;
     const p2x = this.#p2x;
     const p2y = this.#p2y;
+    const w = this.#width;
+    const h = this.#height;
+    const pw = this.#pw;
+    const ph = this.#ph;
+    const toX = this.#toX;
+    const toY = this.#toY;
 
     // Build the curve polyline
     let pts = "";
@@ -83,48 +122,40 @@ class BezierEditor extends HTMLElement {
     render(
       svg`
         <svg
-          viewBox="0 0 ${SIZE} ${SIZE}"
-          width="${SIZE}" height="${SIZE}"
+          viewBox="0 0 ${w} ${h}"
+          width="${w}" height="${h}"
           style="display:block;touch-action:none;user-select:none"
           @pointermove=${this.#onMove}
           @pointerup=${this.#onUp}
           @pointerleave=${this.#onUp}
         >
           <!-- Plot background -->
-          <rect x="${PAD}" y="${PAD}" width="${PW}" height="${PH}" fill="#fafafa" />
+          <rect x="${PAD}" y="${PAD}" width="${pw}" height="${ph}" fill="var(--surface-raised)" />
 
           <!-- Grid -->
           ${[1, 2, 3].map(
             (i) => svg`
-              <line x1="${PAD + (PW * i) / 4}" y1="${PAD}" x2="${PAD + (PW * i) / 4}" y2="${PAD + PH}" stroke="#e0e0e0" stroke-width="1" />
-              <line x1="${PAD}" y1="${PAD + (PH * i) / 4}" x2="${PAD + PW}" y2="${PAD + (PH * i) / 4}" stroke="#e0e0e0" stroke-width="1" />
+              <line x1="${PAD + (pw * i) / 4}" y1="${PAD}" x2="${PAD + (pw * i) / 4}" y2="${PAD + ph}" stroke="var(--border-default)" stroke-width="1" />
+              <line x1="${PAD}" y1="${PAD + (ph * i) / 4}" x2="${PAD + pw}" y2="${PAD + (ph * i) / 4}" stroke="var(--border-default)" stroke-width="1" />
             `,
           )}
 
           <!-- Axes -->
-          <line x1="${PAD}" y1="${PAD + PH}" x2="${PAD + PW}" y2="${PAD + PH}" stroke="#999" stroke-width="1.5" />
-          <line x1="${PAD}" y1="${PAD + PH}" x2="${PAD}" y2="${PAD}" stroke="#999" stroke-width="1.5" />
-
-          <!-- Axis labels -->
-          <text x="${PAD + PW / 2}" y="${PAD + PH + 14}" fill="#888" font-size="10" text-anchor="middle" font-family="system-ui,sans-serif">Step →</text>
-          <text x="${PAD - 14}" y="${PAD + PH / 2}" fill="#888" font-size="10" text-anchor="middle" font-family="system-ui,sans-serif" transform="rotate(-90,${PAD - 14},${PAD + PH / 2})">Lightness →</text>
-
-          <!-- Endpoint labels -->
-          <text x="${PAD - 4}" y="${PAD + 3}" fill="#888" font-size="10" text-anchor="end" font-family="system-ui,sans-serif">Bright</text>
-          <text x="${PAD + PW + 4}" y="${PAD + PH + 3}" fill="#888" font-size="10" text-anchor="start" font-family="system-ui,sans-serif">Dark</text>
+          <line x1="${PAD}" y1="${PAD + ph}" x2="${PAD + pw}" y2="${PAD + ph}" stroke="var(--text-low)" stroke-width="1.5" />
+          <line x1="${PAD}" y1="${PAD + ph}" x2="${PAD}" y2="${PAD}" stroke="var(--text-low)" stroke-width="1.5" />
 
           <!-- Control line P0(0,0) → P1 -->
-          <line x1="${PAD}" y1="${PAD}" x2="${toX(p1x)}" y2="${toY(p1y)}" stroke="#ccc" stroke-width="1" stroke-dasharray="4 3" />
+          <line x1="${PAD}" y1="${PAD}" x2="${toX(p1x)}" y2="${toY(p1y)}" stroke="var(--border-default)" stroke-width="1" stroke-dasharray="4 3" />
 
           <!-- Control line P3(1,1) → P2 -->
-          <line x1="${PAD + PW}" y1="${PAD + PH}" x2="${toX(p2x)}" y2="${toY(p2y)}" stroke="#ccc" stroke-width="1" stroke-dasharray="4 3" />
+          <line x1="${PAD + pw}" y1="${PAD + ph}" x2="${toX(p2x)}" y2="${toY(p2y)}" stroke="var(--border-default)" stroke-width="1" stroke-dasharray="4 3" />
 
           <!-- Curve -->
-          <polyline points="${pts}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round" />
+          <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" />
 
           <!-- Fixed anchors: P0 and P3 -->
-          <circle cx="${PAD}" cy="${PAD}" r="3" fill="#999" />
-          <circle cx="${PAD + PW}" cy="${PAD + PH}" r="3" fill="#999" />
+          <circle cx="${PAD}" cy="${PAD}" r="3" fill="var(--text-low)" />
+          <circle cx="${PAD + pw}" cy="${PAD + ph}" r="3" fill="var(--text-low)" />
 
           <!-- P1 handle -->
           ${this.#handle(toX(p1x), toY(p1y), this.#dragging === "p1", "p1")}
@@ -141,12 +172,12 @@ class BezierEditor extends HTMLElement {
     return svg`
       <circle
         cx="${cx}" cy="${cy}" r="${HANDLE_R}"
-        fill="${active ? "#2563eb" : "#fff"}"
-        stroke="#2563eb" stroke-width="2"
+        fill="${active ? "var(--accent)" : "var(--surface-default)"}"
+        stroke="var(--accent)" stroke-width="2"
         style="cursor:grab"
         @pointerdown=${(e: PointerEvent) => this.#start(e, which)}
       />
-      <circle cx="${cx}" cy="${cy}" r="2.5" fill="${active ? "#fff" : "#2563eb"}" pointer-events="none" />
+      <circle cx="${cx}" cy="${cy}" r="2.5" fill="${active ? "var(--surface-default)" : "var(--accent)"}" pointer-events="none" />
     `;
   }
 
@@ -166,12 +197,12 @@ class BezierEditor extends HTMLElement {
 
     const svgEl = this.querySelector("svg")!;
     const rect = svgEl.getBoundingClientRect();
-    const sx = SIZE / rect.width;
-    const sy = SIZE / rect.height;
+    const sx = this.#width / rect.width;
+    const sy = this.#height / rect.height;
     const px = (e.clientX - rect.left) * sx;
     const py = (e.clientY - rect.top) * sy;
-    const nx = fromX(px);
-    const ny = fromY(py);
+    const nx = this.#fromX(px);
+    const ny = this.#fromY(py);
 
     if (this.#dragging === "p1") {
       this.#p1x = nx;

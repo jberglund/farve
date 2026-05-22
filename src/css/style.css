@@ -1,10 +1,13 @@
-@import "./css/reset.css";
-@import "./css/variables.css";
-@import "./css/form-controls.css";
-@import "./css/buttons.css";
-@import "./css/spacing.css";
-@import "./css/stack.css";
-@import "./css/misc.css";
+@import "./reset.css";
+@import "./variables.css";
+@import "./color.css";
+@import "./form-controls.css";
+@import "./buttons.css";
+@import "./spacing.css";
+@import "./stack.css";
+@import "./misc.css";
+@import "./defaults.css";
+@import "./typography.css";
 
 *,
 *::before,
@@ -30,8 +33,6 @@
     "Helvetica Neue",
     sans-serif;
 }
-body {
-}
 
 #app {
   display: grid;
@@ -44,9 +45,13 @@ body {
   gap: 3rem;
 }
 
+palette-panel {
+  padding-block: var(--spacing-l);
+}
+
 .the-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--spacing-xl);
   grid-template-columns: 200px 1fr;
   grid-template-areas: "configuration steps";
 }
@@ -66,6 +71,8 @@ body {
 }
 
 .step-item {
+  height: 100%;
+  min-height: 10rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -96,26 +103,12 @@ body {
   font-size: 0.75rem;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   padding: 0.2rem 0.3rem;
-  border: 1px solid #ccc;
   border-radius: 3px;
   width: 100%;
 }
 
-.origin-oklch {
-  font-size: 0.7rem;
-  font-variant-numeric: tabular-nums;
-  color: #555;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.origin-oklch__val {
-  font-weight: 600;
-  color: #222;
-}
-
 .palette-swatch {
-  aspect-ratio: 2/3;
+  height: 8rem;
 }
 
 gamut-checker {
@@ -127,11 +120,7 @@ gamut-checker {
 
 gamut-checker[color-gamut="rec2020"],
 gamut-checker[color-gamut="rec2020+"] {
-  background: repeating-linear-gradient(
-    -61deg,
-    oklch(0.59 0.02 0.88 / 0.26) 0 1px,
-    transparent 0px 4px
-  );
+  background: repeating-linear-gradient(-61deg, var(--gamut-warning) 0 1px, transparent 0px 4px);
 }
 
 /* ------------------------------------------------------------------ */
@@ -143,7 +132,7 @@ gamut-checker[color-gamut="rec2020+"] {
   align-items: center;
   gap: 1rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-default);
   margin-bottom: 0.5rem;
   flex-wrap: wrap;
 }
@@ -153,9 +142,9 @@ gamut-checker[color-gamut="rec2020+"] {
   align-items: center;
   gap: var(--spacing-m);
   font-size: 0.75rem;
-  background: #f8f8f8;
+  background: var(--surface-raised);
   padding: 2px 2px 2px 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-default);
   border-radius: 8px;
 }
 
@@ -171,4 +160,78 @@ gamut-checker[color-gamut="rec2020+"] {
 .palette-actions {
   gap: 0.25rem;
   margin-top: 0.4rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Export dialog                                                      */
+/* ------------------------------------------------------------------ */
+
+.export-dialog {
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 0;
+  max-width: 640px;
+  width: 92vw;
+  box-shadow: var(--shadow-dialog);
+}
+
+.export-dialog::backdrop {
+  background: var(--scrim);
+}
+
+.export-dialog__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.export-dialog__split {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--spacing-l);
+  align-items: start;
+}
+
+/* fieldset reset — layout (stack, gap, padding) handled by utility classes in the template */
+.export-dialog fieldset {
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  margin: 0;
+}
+
+.export-dialog fieldset > legend {
+  padding: 0 var(--spacing-2xs);
+  margin-bottom: var(--spacing-2xs);
+}
+
+.export-dialog__checkbox {
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+
+.export-dialog__checkbox input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--text-mid);
+}
+
+.export-dialog__label {
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.export-dialog__preview-wrapper {
+  min-width: 0;
+}
+
+.export-dialog__preview {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  padding: var(--spacing-s);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--surface-raised);
+  resize: vertical;
+  tab-size: 2;
+  width: 100%;
 }

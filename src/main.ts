@@ -1,9 +1,11 @@
-import "./style.css";
+import "./css/style.css";
 import "./components/gamut-checker";
 import "./components/step-slider";
 import "./components/lightness-editor";
 import "./components/palette-panel";
 import "./components/palette-toolbar";
+import "./components/export-dialog";
+import "./components/tool-tip";
 import { initHotkeys } from "./hotkey";
 import { initUrlSync } from "./state";
 import { store } from "./state/store";

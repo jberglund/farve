@@ -139,4 +139,4 @@ export const BEZIER_PRESETS: { key: string; label: string; controls: BezierContr
 
 /** Default endpoint lightness values. */
 export const DEFAULT_START_L = 0.995;
-export const DEFAULT_END_L = 0.05;
+export const DEFAULT_END_L = 0.2;

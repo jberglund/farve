@@ -7,7 +7,9 @@
     "dev": "vp dev",
     "build": "tsc && vp build",
     "preview": "vp preview",
-    "prepare": "vp config"
+    "prepare": "vp config",
+    "test": "vp test",
+    "test:file": "vp test run"
   },
   "dependencies": {
     "colorjs.io": "^0.6.1",
@@ -16,7 +18,8 @@
   "devDependencies": {
     "typescript": "~6.0.2",
     "vite": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   },
   "packageManager": "pnpm@11.1.1"
 }

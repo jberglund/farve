@@ -1,15 +1,90 @@
 :root {
-  --base-root: 1rem;
-  --spacing-3xs: calc(0.125 * var(--base-root));
-  --spacing-2xs: calc(0.25 * var(--base-root));
-  --spacing-xs: calc(0.5 * var(--base-root));
-  --spacing-s: calc(0.75 * var(--base-root));
-  --spacing-m: calc(1 * var(--base-root));
-  --spacing-l: calc(1.5 * var(--base-root));
-  --spacing-xl: calc(2 * var(--base-root));
-  --spacing-2xl: calc(3 * var(--base-root));
-  --spacing-3xl: calc(4 * var(--base-root));
-  --spacing-4xl: calc(6 * var(--base-root));
-  --spacing-5xl: calc(8 * var(--base-root));
-  --spacing-6xl: calc(12 * var(--base-root));
+  --base-font-size: 1rem; /* might have to go unitless */
+
+  --spacing-3xs: calc(0.125 * var(--base-font-size));
+  --spacing-2xs: calc(0.25 * var(--base-font-size));
+  --spacing-xs: calc(0.5 * var(--base-font-size));
+  --spacing-s: calc(0.75 * var(--base-font-size));
+  --spacing-m: calc(1 * var(--base-font-size));
+  --spacing-l: calc(1.5 * var(--base-font-size));
+  --spacing-xl: calc(2 * var(--base-font-size));
+  --spacing-2xl: calc(3 * var(--base-font-size));
+  --spacing-3xl: calc(4 * var(--base-font-size));
+  --spacing-4xl: calc(6 * var(--base-font-size));
+  --spacing-5xl: calc(8 * var(--base-font-size));
+  --spacing-6xl: calc(12 * var(--base-font-size));
+
+  --typescale: 1.125;
+  --font-size-xs: calc(var(--base-font-size) * pow(var(--typescale), -2));
+  --font-size-s: calc(var(--base-font-size) * pow(var(--typescale), -1));
+  --font-size-m: var(--base-font-size); /*  17px   */
+  --font-size-l: calc(var(--base-font-size) * pow(var(--typescale), 1));
+  --font-size-xl: calc(var(--base-font-size) * pow(var(--typescale), 2));
+  --font-size-2xl: calc(var(--base-font-size) * pow(var(--typescale), 3));
+  --font-size-3xl: calc(var(--base-font-size) * pow(var(--typescale), 4));
+  --font-size-4xl: calc(var(--base-font-size) * pow(var(--typescale), 5));
+
+  --font-weight-default: 400;
+
+  --font-weight-regular: var(--font-weight-default);
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+}
+
+:root {
+  /* DO NOT USE THESE RAW PALETTE VARIABLES DIRECTLY
+   * Only use semantic color tokens.
+   * Please.
+   **/
+  --neutral-0: oklch(0.985 0 236.764);
+  --neutral-50: oklch(0.974 0.001 236.764);
+  --neutral-100: oklch(0.961 0.001 236.764);
+  --neutral-150: oklch(0.942 0.001 236.764);
+  --neutral-200: oklch(0.919 0.002 236.764);
+  --neutral-250: oklch(0.888 0.003 236.764);
+  --neutral-300: oklch(0.85 0.005 236.764);
+  --neutral-350: oklch(0.802 0.007 236.764);
+  --neutral-400: oklch(0.744 0.01 236.764);
+  --neutral-450: oklch(0.68 0.014 236.764);
+  --neutral-500: oklch(0.615 0.015 236.764);
+  --neutral-550: oklch(0.555 0.014 236.764);
+  --neutral-600: oklch(0.502 0.012 236.764);
+  --neutral-650: oklch(0.456 0.011 236.764);
+  --neutral-700: oklch(0.418 0.01 236.764);
+  --neutral-750: oklch(0.384 0.009 236.764);
+  --neutral-800: oklch(0.355 0.008 236.764);
+  --neutral-850: oklch(0.331 0.007 236.764);
+  --neutral-900: oklch(0.309 0.007 236.764);
+  --neutral-950: oklch(0.29 0.007 236.764);
+
+  /* ------------------------------------------------------------------ */
+  /* Semantic color tokens                                              */
+  /* ------------------------------------------------------------------ */
+
+  /* Text */
+  --text-high: var(--neutral-900);
+  --text-mid: var(--neutral-550);
+  --text-low: var(--neutral-350);
+
+  /* Surfaces */
+  --surface-default: var(--neutral-0);
+  --surface-raised: var(--neutral-50);
+  --surface-hover: var(--neutral-150);
+  --surface-overlay: oklch(0 0 0 / 0.06);
+
+  /* Borders */
+  --border-default: var(--neutral-300);
+
+  /* Accent */
+  --accent: #2563eb;
+
+  /* Shadows */
+  --shadow-default: 0 2px 12px oklch(0 0 0 / 0.12);
+  --shadow-dialog: 0 4px 24px oklch(0 0 0 / 0.15);
+
+  /* Scrim */
+  --scrim: oklch(0 0 0 / 0.3);
+
+  /* Gamut warning */
+  --gamut-warning: oklch(0.59 0.02 0.88 / 0.26);
 }

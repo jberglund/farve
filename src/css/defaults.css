@@ -1,0 +1,47 @@
+@layer defaults {
+  /* Inline code — subtle background, slightly smaller */
+  :is(code, kbd, samp) {
+    font-size: var(--font-size-s);
+    background: var(--surface-raised);
+    padding: var(--spacing-3xs) var(--spacing-2xs);
+    border-radius: 3px;
+  }
+
+  /* Code blocks — same treatment but block-level */
+  pre {
+    font-size: var(--font-size-s);
+    line-height: 1.5;
+    padding: var(--spacing-s);
+    border-radius: 6px;
+    overflow-x: auto;
+    background: var(--surface-raised);
+  }
+
+  /* Undo the inline-code look when code is inside pre */
+  pre :is(code, kbd, samp) {
+    font-size: inherit;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  /* Blockquote — left rail, muted */
+  blockquote {
+    border-inline-start: 3px solid var(--border-default);
+    padding-inline-start: var(--spacing-m);
+    color: var(--text-mid);
+  }
+
+  /* Horizontal rule — kill the default groove, subtle line */
+  hr {
+    border: none;
+    border-block-start: 1px solid var(--border-default);
+  }
+
+  /* Links — visible underlines with a touch of breathing room */
+  a {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    text-decoration-thickness: 0.08em;
+  }
+}

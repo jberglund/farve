@@ -1,0 +1,65 @@
+/* ------------------------------------------------------------------ */
+/* Color utility classes                                              */
+/* ------------------------------------------------------------------ */
+
+/* Text */
+
+.text-high {
+  color: var(--text-high);
+}
+
+.text-mid {
+  color: var(--text-mid);
+}
+
+.text-low {
+  color: var(--text-low);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+/* Surfaces */
+
+.surface-default {
+  background-color: var(--surface-default);
+}
+
+.surface-raised {
+  background-color: var(--surface-raised);
+}
+
+.surface-hover {
+  background-color: var(--surface-hover);
+}
+
+.surface-overlay {
+  background-color: var(--surface-overlay);
+}
+
+/* Borders */
+
+.border-default {
+  border: 1px solid var(--border-default);
+}
+
+.border-bottom-default {
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* Shadows */
+
+.shadow-default {
+  box-shadow: var(--shadow-default);
+}
+
+.shadow-dialog {
+  box-shadow: var(--shadow-dialog);
+}
+
+/* Scrim */
+
+.scrim {
+  background: var(--scrim);
+}
