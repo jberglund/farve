@@ -97,4 +97,3 @@ class ToolTip extends HTMLElement {
 }
 
 customElements.define("tool-tip", ToolTip);
-export default ToolTip;

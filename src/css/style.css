@@ -49,20 +49,16 @@
 
 #palettes {
   display: grid;
-  gap: 3rem;
 }
 
 .icon {
+  width: 1em;
+  height: 1em;
   color: var(--accent);
-}
-
-palette-panel {
-  padding-block: var(--spacing-l);
 }
 
 .the-grid {
   display: grid;
-  gap: var(--spacing-xl);
   grid-template-columns: 200px 1fr;
   grid-template-areas: "configuration steps";
 }
@@ -93,16 +89,10 @@ step-slider {
   height: 100%;
   min-height: 12rem;
   max-height: 12rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .palette-origin {
   grid-area: configuration;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
 }
 
 /* Origin swatch — clickable preview that opens the hidden color picker */
@@ -112,15 +102,12 @@ step-slider {
   border-radius: 4px;
   border: none;
   cursor: pointer;
-  align-self: stretch;
-  justify-self: end;
   z-index: 10;
   margin: 4px;
 }
 
 .origin-text {
   font: inherit;
-  font-size: 0.75rem;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   padding: 0.2rem 0.3rem;
   border-radius: 3px;
@@ -137,26 +124,10 @@ step-slider {
 
 .toolbar-bar {
   display: flex;
-  align-items: center;
   gap: 1rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--border-default);
   margin-bottom: 0.5rem;
   flex-wrap: wrap;
-}
-
-.toolbar-setting-value {
-  font-variant-numeric: tabular-nums;
-  min-width: 2.2em;
-}
-
-/* ------------------------------------------------------------------ */
-/* Palette actions (clone / remove buttons)                           */
-/* ------------------------------------------------------------------ */
-
-.palette-actions {
-  gap: 0.25rem;
-  margin-top: 0.4rem;
 }
 
 /* ------------------------------------------------------------------ */
@@ -164,11 +135,7 @@ step-slider {
 /* ------------------------------------------------------------------ */
 
 .advanced-popover {
-  border: 1px solid var(--border-default);
   border-radius: 12px;
-  background: var(--surface-raised);
-  box-shadow: var(--shadow-dialog);
-  margin: 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -176,12 +143,9 @@ step-slider {
 /* ------------------------------------------------------------------ */
 
 .export-dialog {
-  border: 1px solid var(--border-default);
   border-radius: 8px;
-  padding: 0;
   max-width: 640px;
   width: 92vw;
-  box-shadow: var(--shadow-dialog);
 }
 
 .export-dialog::backdrop {
@@ -189,43 +153,22 @@ step-slider {
 }
 
 .export-dialog__title {
-  margin: 0;
   font-size: 1.1rem;
 }
 
-.export-dialog__split {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: var(--spacing-l);
-  align-items: start;
-}
-
-/* fieldset reset — layout (stack, gap, padding) handled by utility classes in the template */
+/* fieldset reset — layout handled by utility classes in the template */
 .export-dialog fieldset {
-  border: 1px solid var(--border-default);
   border-radius: 4px;
-  margin: 0;
-}
-
-.export-dialog fieldset > legend {
-  padding: 0 var(--spacing-2xs);
-  margin-bottom: var(--spacing-2xs);
 }
 
 .export-dialog__checkbox {
   font-size: 0.8rem;
   cursor: pointer;
-  font-variant-numeric: tabular-nums;
 }
 
 .export-dialog__checkbox input[type="checkbox"] {
   margin: 0;
   accent-color: var(--text-mid);
-}
-
-.export-dialog__label {
-  font-weight: 600;
-  font-size: 0.75rem;
 }
 
 .export-dialog__preview-wrapper {

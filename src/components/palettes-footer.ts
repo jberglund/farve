@@ -13,9 +13,10 @@ class PalettesFooter extends HTMLElement {
   #render() {
     render(
       html`
-        <div class="toolbar-bar">
+        <div class="toolbar-bar items-center border-bottom-default">
           <button class="button button--primary ml-auto" @click=${() => store.addDefaultPalette()}>
-            + Add palette
+            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-plus" /></svg>
+            Add palette
           </button>
         </div>
       `,
@@ -25,4 +26,3 @@ class PalettesFooter extends HTMLElement {
 }
 
 customElements.define("palettes-footer", PalettesFooter);
-export default PalettesFooter;

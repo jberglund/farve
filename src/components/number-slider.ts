@@ -138,4 +138,3 @@ class NumberSlider extends HTMLElement {
 }
 
 customElements.define("number-slider", NumberSlider);
-export default NumberSlider;

@@ -61,8 +61,27 @@ export const DEFAULT_SETTINGS: AppSettings = {
   propagateDecay: 0.5,
 };
 
+/**
+ * All four control points of a cubic-bezier curve.
+ *
+ * P0.x = 0 and P3.x = 1 are fixed (the x-axis represents the step range).
+ * P0.y and P3.y control the start / end lightness (y=0 → bright top,
+ * y=1 → dark bottom).  P1 and P2 are the inner shape handles.
+ */
+export interface BezierControls {
+  p0y: number;
+  p1x: number;
+  p1y: number;
+  p2x: number;
+  p2y: number;
+  p3y: number;
+}
+
 /** The full application state. */
 export interface State {
+  /** Bezier curve controls — the source of truth for the lightness curve. */
+  bezierControls: BezierControls;
+  /** Derived 20-step lightness values (computed from bezierControls). */
   lightness: Curve;
   palettes: Record<string, PaletteConfig>;
   settings: AppSettings;

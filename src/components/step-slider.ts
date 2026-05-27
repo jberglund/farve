@@ -30,7 +30,7 @@ class StepSlider extends HTMLElement {
     // Light DOM — inherits global CSS from inputs.css and form-controls.css
     render(
       html`
-        <label class="step-item">
+        <label class="step-item stack items-center">
           <span class="fs-xs mb-xs" ?hidden=${!showLabel}>${stepKey}</span>
           <div class="slider-track">
             <div class="ceiling-zone"></div>
@@ -154,4 +154,3 @@ class StepSlider extends HTMLElement {
 }
 
 customElements.define("step-slider", StepSlider);
-export default StepSlider;

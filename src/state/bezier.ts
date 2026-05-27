@@ -1,41 +1,9 @@
-import { STEPS, type Curve } from "./types";
+import { STEPS, type Curve, type BezierControls } from "./types";
 import { snap } from "./derive";
 
 // ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-/**
- * All four control points of a cubic-bezier curve.
- *
- * P0.x = 0 and P3.x = 1 are fixed (the x-axis represents the step range).
- * P0.y and P3.y control the start / end lightness (y=0 → bright top,
- * y=1 → dark bottom).  P1 and P2 are the inner shape handles.
- */
-export interface BezierControls {
-  p0y: number;
-  p1x: number;
-  p1y: number;
-  p2x: number;
-  p2y: number;
-  p3y: number;
-}
-
-// ---------------------------------------------------------------------------
 // Bezier math  (P0.x=0, P3.x=1 fixed; P0.y, P3.y variable)
-// ---------------------------------------------------------------------------
-
-/** Evaluate the parametric curve at t ∈ [0,1]. */
-export function cubicBezierPoint(t: number, c: BezierControls): { x: number; y: number } {
-  const { p0y, p1x, p1y, p2x, p2y, p3y } = c;
-  const u = 1 - t;
-  const uu = u * u;
-  const tt = t * t;
-  return {
-    x: 3 * uu * t * p1x + 3 * u * tt * p2x + tt * t,
-    y: uu * u * p0y + 3 * uu * t * p1y + 3 * u * tt * p2y + tt * t * p3y,
-  };
-}
+// --------------------------------------------------------------------------
 
 /**
  * Solve for y on the bezier at a given x ∈ [0,1].
@@ -105,6 +73,23 @@ export function bezierToCurve(c: BezierControls): Curve {
 // ---------------------------------------------------------------------------
 // Presets  (full-bezier shapes with p0y=0, p3y=1)
 // ---------------------------------------------------------------------------
+
+/** Match a BezierControls against presets by checking all six values. */
+export function findMatchingPreset(c: BezierControls): string | null {
+  for (const p of BEZIER_PRESETS) {
+    if (
+      p.controls.p0y === c.p0y &&
+      p.controls.p1x === c.p1x &&
+      p.controls.p1y === c.p1y &&
+      p.controls.p2x === c.p2x &&
+      p.controls.p2y === c.p2y &&
+      p.controls.p3y === c.p3y
+    ) {
+      return p.key;
+    }
+  }
+  return null;
+}
 
 export const BEZIER_PRESETS: { key: string; label: string; controls: BezierControls }[] = [
   {

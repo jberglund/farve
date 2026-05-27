@@ -61,19 +61,6 @@ export const spreadTip = html`
 // lightness-editor
 // ---------------------------------------------------------------------------
 
-export const lightnessHeadingTip = html`
-  <div class="typeset">
-    <p>
-      In OKLCH, <strong>lightness</strong> is perceptually uniform: a jump from 50→100 feels the
-      same as 800→850. No weird brightness cliffs.
-    </p>
-    <p>
-      This curve maps each of the 20 palette steps to a lightness value.
-      <strong>Top</strong> = bright, <strong>bottom</strong> = dark.
-    </p>
-  </div>
-`;
-
 export const presetTip = html`
   <div class="typeset">
     <p>
@@ -89,18 +76,6 @@ export const presetTip = html`
       <dt>Flat</dt>
       <dd>narrow range, low contrast</dd>
     </dl>
-  </div>
-`;
-
-export const bezierEditorTip = html`
-  <div class="typeset">
-    <p>Drag the <strong>blue handles</strong> to shape how lightness flows across your steps.</p>
-    <ul>
-      <li><strong>Left → right</strong>: step 0 (lightest) → step 950 (darkest)</li>
-      <li><strong>Top → bottom</strong>: high lightness → low lightness</li>
-    </ul>
-    <p>A steep curve = big contrast. A flat curve = narrow range.</p>
-    <p>The dashed lines show each handle's pull direction.</p>
   </div>
 `;
 

@@ -13,4 +13,3 @@
 class GamutChecker extends HTMLElement {}
 
 customElements.define("gamut-checker", GamutChecker);
-export default GamutChecker;

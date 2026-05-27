@@ -3,29 +3,43 @@ import {
   type AppSettings,
   STEPS,
   type Curve,
+  type BezierControls,
   type PaletteConfig,
   DEFAULT_SETTINGS,
 } from "./types";
 import { store, type Store } from "./store";
 import { snap } from "./derive";
+import { bezierToCurve } from "./bezier";
 
 /**
  * Parse the URL hash fragment into application state.
  *
  * All numeric values are stored as integers (×1000) to keep the URL compact.
- * Example: #L=985,970,955&p1=40,60,80&p1-origin=620,180,264000
+ * Example: #b=15,750,55,250,760,800&p1=40,60,80&p1-origin=620,180,264000
  */
-export function parseHashParams(): State | null {
+function parseHashParams(): State | null {
   const raw = location.hash.slice(1); // strip leading #
   if (!raw) return null;
 
   const params = new URLSearchParams(raw);
 
-  const lightnessRaw = params.get("L");
-  if (!lightnessRaw) return null;
+  const bezierRaw = params.get("b");
+  let bezierControls: BezierControls | null;
+  let lightness: Curve | null;
 
-  const lightness = parseCurve(lightnessRaw);
-  if (!lightness) return null;
+  if (bezierRaw) {
+    bezierControls = parseBezierControls(bezierRaw);
+    if (!bezierControls) return null;
+    lightness = bezierToCurve(bezierControls);
+  } else {
+    // Backward compat: old URLs stored the 20-step curve directly.
+    // Use the values for lightness and fall back to the S-curve default.
+    const lightnessRaw = params.get("L");
+    if (!lightnessRaw) return null;
+    lightness = parseCurve(lightnessRaw);
+    if (!lightness) return null;
+    bezierControls = { p0y: 0.015, p1x: 0.75, p1y: 0.055, p2x: 0.25, p2y: 0.76, p3y: 0.8 };
+  }
 
   const palettes: Record<string, PaletteConfig> = {};
 
@@ -51,15 +65,18 @@ export function parseHashParams(): State | null {
 
   const settings = parseSettings(params);
 
-  return { lightness, palettes, settings };
+  return { bezierControls, lightness, palettes, settings };
 }
 
 /**
  * Serialize current state into a URL hash fragment.
  * Uses replaceState to avoid flooding browser history on every slider drag.
  */
-export function syncToUrl(state: State): void {
-  const parts = [`L=${curveToString(state.lightness)}`];
+function syncToUrl(state: State): void {
+  const c = state.bezierControls;
+  const parts = [
+    `b=${enc(c.p0y)},${enc(c.p1x)},${enc(c.p1y)},${enc(c.p2x)},${enc(c.p2y)},${enc(c.p3y)}`,
+  ];
 
   for (const [id, palette] of Object.entries(state.palettes)) {
     parts.push(`${id}=${curveToString(palette.chroma)}`);
@@ -120,6 +137,19 @@ function enc(n: number): number {
 function dec(n: number): number {
   if (Number.isNaN(n)) return 0;
   return snap(n / 1000);
+}
+
+function parseBezierControls(raw: string): BezierControls | null {
+  const parts = raw.split(",").map(Number);
+  if (parts.length !== 6) return null;
+  return {
+    p0y: dec(parts[0]!),
+    p1x: dec(parts[1]!),
+    p1y: dec(parts[2]!),
+    p2x: dec(parts[3]!),
+    p2y: dec(parts[4]!),
+    p3y: dec(parts[5]!),
+  };
 }
 
 function parseCurve(raw: string): Curve | null {

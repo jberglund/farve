@@ -49,8 +49,8 @@ class PalettePanel extends HTMLElement {
 
     render(
       html`
-        <section class="the-grid">
-          <div class="the-grid__configuration palette-origin">
+        <section class="the-grid gap-xl">
+          <div class="the-grid__configuration palette-origin stack gap-2xs">
             <input
               id="palette-name-${this.#paletteId}"
               type="text"
@@ -66,18 +66,24 @@ class PalettePanel extends HTMLElement {
               c="${palette.origin.c}"
               h="${palette.origin.h}"
             ></palette-origin>
-            <div class="palette-actions">
-              <button class="button" title="Clone palette" @click=${this.#onCloneClick}>
-                <span class="icon">⧉</span>
+            <div class="mt-auto stack-horizontal gap-s">
+              <button
+                class="button flex-1"
+                title="Clone palette"
+                data-size="small"
+                @click=${this.#onCloneClick}
+              >
+                <svg class="icon" viewBox="0 0 24 24"><use href="#icon-clone" /></svg>
                 Clone
               </button>
               <button
-                class="button"
+                class="button flex-1"
                 title="Remove palette"
+                data-size="small"
                 ?disabled=${paletteCount <= 1}
                 @click=${this.#onRemoveClick}
               >
-                <span class="icon">×</span>
+                <svg class="icon" viewBox="0 0 24 24"><use href="#icon-remove" /></svg>
                 Remove
               </button>
             </div>
@@ -174,4 +180,3 @@ class PalettePanel extends HTMLElement {
 }
 
 customElements.define("palette-panel", PalettePanel);
-export default PalettePanel;

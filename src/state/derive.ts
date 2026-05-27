@@ -10,13 +10,8 @@ export interface Swatch {
   h: number;
 }
 
-export type GamutLabel = "srgb" | "p3" | "rec2020" | "rec2020+";
-
-const GAMUTS = ["srgb", "p3", "rec2020"] as const;
-
 /**
  * Derive all swatches for a palette from the current state.
- * Pure function — no side effects, no store dependency.
  */
 export function deriveSwatches(state: State, paletteId: string): Swatch[] {
   const palette = state.palettes[paletteId];
@@ -117,30 +112,8 @@ function memoize<A extends unknown[], R>(fn: (...args: A) => R, max = 600): (...
 // ---------------------------------------------------------------------------
 
 /**
- * Classify which gamut a given OKLCH color falls into.
- * Returns the narrowest gamut that contains the color.
- * Pure function — no side effects.
- */
-function _classifyGamut(l: number, c: number, h: number): GamutLabel {
-  const color = new Color("oklch", [l, c, h]);
-  for (const gamut of GAMUTS) {
-    try {
-      if (color.to(gamut).inGamut()) {
-        return gamut;
-      }
-    } catch {
-      // Conversion failed for this space — try the next
-    }
-  }
-  return "rec2020+";
-}
-
-/**
  * Binary search for the maximum chroma at a given L,H that stays within
  * the specified gamut. Used to position the ceiling/danger-zone on sliders.
- *
- * Uses the same `inGamut()` check as `classifyGamut` so the ceiling line
- * and the gamut badge are always consistent.
  */
 function _maxInGamutChroma(l: number, h: number, gamut: string): number {
   let lo = 0;
@@ -172,7 +145,6 @@ function _maxInGamutChroma(l: number, h: number, gamut: string): number {
   return snap(lo);
 }
 
-// Memoized exports — all inputs are snapped to 3 decimal places, so during a
+// Memoized export — all inputs are snapped to 3 decimal places, so during a
 // slider drag on one step, 19 of 20 calls hit the cache.
-export const classifyGamut = memoize(_classifyGamut);
 export const maxInGamutChroma = memoize(_maxInGamutChroma);

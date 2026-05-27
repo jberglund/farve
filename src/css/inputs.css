@@ -21,7 +21,7 @@
     --border-control-error: var(--neutral-500);
     --foreground-muted: var(--text-low);
 
-    --size-control-height-medium: 1.5rem;
+    --size-control-height-medium: 1.75rem;
     --size-control-height-small: 1.25rem;
     --size-control-height-large: 2rem;
   }

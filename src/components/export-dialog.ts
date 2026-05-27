@@ -81,12 +81,12 @@ class ExportDialog extends HTMLElement {
       html`
         <div class="export-dialog border-default shadow-dialog p-0" popover="auto">
           <div class="stack gap-m p-l">
-            <h2 class="export-dialog__title">Export Palettes</h2>
+            <h2 class="export-dialog__title m-0">Export Palettes</h2>
 
             <!-- Top row: format + prefix, full width -->
             <div class="stack-horizontal gap-m items-end">
               <label class="stack gap-3xs flex-1">
-                <span class="export-dialog__label">Format</span>
+                <span class="export-dialog__label t-medium fs-xs">Format</span>
                 <select .value=${this.#format} @change=${this.#onFormatChange}>
                   ${Object.entries(FORMAT_LABELS).map(
                     ([value, label]) =>
@@ -98,7 +98,7 @@ class ExportDialog extends HTMLElement {
               </label>
 
               <label class="stack gap-3xs flex-1">
-                <span class="export-dialog__label">Name prefix</span>
+                <span class="export-dialog__label t-medium fs-xs">Name prefix</span>
                 <input
                   id="export-prefix"
                   class="input"
@@ -112,11 +112,11 @@ class ExportDialog extends HTMLElement {
 
             <!-- Bottom row: palette checkboxes + preview, split -->
             <div class="stack-horizontal gap-m items-start">
-              <fieldset class="stack gap-2xs p-s">
-                <legend class="export-dialog__label">Palettes</legend>
+              <fieldset class="stack gap-2xs p-s border-default m-0">
+                <legend class="export-dialog__label px-2xs mb-2xs">Palettes</legend>
                 ${allIds.map(
                   (id) => html`
-                    <label class="stack-horizontal gap-2xs export-dialog__checkbox">
+                    <label class="stack-horizontal gap-2xs export-dialog__checkbox t-tabular">
                       <input
                         id="export-palette-${id}"
                         type="checkbox"
@@ -137,7 +137,7 @@ class ExportDialog extends HTMLElement {
               </fieldset>
 
               <label class="stack gap-3xs export-dialog__preview-wrapper flex-1">
-                <span class="export-dialog__label">Preview</span>
+                <span class="export-dialog__label t-medium fs-xs">Preview</span>
                 <textarea
                   class="export-dialog__preview border-default surface-raised"
                   readonly
@@ -271,4 +271,3 @@ export function openExportDialog(): void {
 }
 
 customElements.define("export-dialog", ExportDialog);
-export default ExportDialog;

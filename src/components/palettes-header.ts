@@ -26,7 +26,7 @@ class PalettesHeader extends HTMLElement {
 
     render(
       html`
-        <div class="toolbar-bar">
+        <div class="toolbar-bar items-center border-bottom-default">
           <h2>Palettes</h2>
           <button class="button button--primary" @click=${this.#addPalette}>+ Add palette</button>
 
@@ -87,4 +87,3 @@ class PalettesHeader extends HTMLElement {
 }
 
 customElements.define("palettes-header", PalettesHeader);
-export default PalettesHeader;

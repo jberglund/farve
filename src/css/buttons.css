@@ -23,21 +23,21 @@
 
   :where(.button:not([data-size]), .button[data-size="medium"]) {
     --_button-height: var(--size-control-height-medium);
-    --_button-padding-inline: var(--spacing-m);
+    --_button-padding-inline: var(--spacing-s);
     --_button-font-size: var(--font-size-s);
     --_button-gap: var(--spacing-xs);
   }
 
   :where(.button[data-size="small"]) {
     --_button-height: var(--size-control-height-small);
-    --_button-padding-inline: var(--spacing-s);
+    --_button-padding-inline: var(--spacing-xs);
     --_button-font-size: var(--font-size-xs);
     --_button-gap: var(--spacing-2xs);
   }
 
   :where(.button[data-size="large"]) {
     --_button-height: var(--size-control-height-large);
-    --_button-padding-inline: var(--spacing-l);
+    --_button-padding-inline: var(--spacing-s);
     --_button-font-size: var(--font-size-m);
     --_button-gap: var(--spacing-xs);
   }

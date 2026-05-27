@@ -33,13 +33,21 @@ class PaletteToolbar extends HTMLElement {
     render(
       html`
         <div class="stack-horizontal justify-end gap-m items-stretch py-xl">
-          <button class="button" @click=${openExportDialog}>Export</button>
+          <button class="button" @click=${openExportDialog}>
+            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-export" /></svg>
+            Export
+          </button>
           <button class="button" popovertarget="advanced-popover" aria-expanded="false">
+            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-advanced" /></svg>
             Advanced
           </button>
         </div>
 
-        <div id="advanced-popover" class="advanced-popover" popover="auto">
+        <div
+          id="advanced-popover"
+          class="advanced-popover border-default surface-raised shadow-dialog m-0"
+          popover="auto"
+        >
           <div class="stack gap-s p-m">
             <label class="p-2xs inline-flex items-center gap-xs fs-s surface-raised border-default">
               <span>Max chroma<tool-tip>${maxChromaTip}</tool-tip></span>
@@ -94,4 +102,3 @@ class PaletteToolbar extends HTMLElement {
 }
 
 customElements.define("palette-toolbar", PaletteToolbar);
-export default PaletteToolbar;

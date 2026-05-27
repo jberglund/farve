@@ -3,6 +3,7 @@ import {
   type State,
   type Step,
   type Curve,
+  type BezierControls,
   type PaletteConfig,
   type Origin,
   type AppSettings,
@@ -39,10 +40,6 @@ export class Store {
 
   // --- readers ---
 
-  getLightness(step: Step): number {
-    return this.#state.lightness[step];
-  }
-
   getChroma(paletteId: string, step: Step): number {
     return this.#state.palettes[paletteId].chroma[step];
   }
@@ -61,23 +58,11 @@ export class Store {
 
   // --- writers ---
 
-  setLightness(step: Step, value: number): void {
-    if (this.#state.settings.propagateChanges) {
-      this.#propagate(this.#state.lightness, step, value, 1);
-    } else {
-      this.#state.lightness[step] = snap(value);
-    }
+  /** Replace the bezier controls and re-derive the lightness curve. */
+  setBezierControls(controls: BezierControls): void {
+    this.#state.bezierControls = { ...controls };
+    this.#state.lightness = bezierToCurve(controls);
     this.#scheduleNotify();
-  }
-
-  /** Replace the entire lightness curve (reset / preset). */
-  setLightnessCurve(curve: Curve): void {
-    const snapped = {} as Curve;
-    for (const step of STEPS) {
-      snapped[step] = snap(curve[step]);
-    }
-    this.#state.lightness = snapped;
-    this.#notify();
   }
 
   setChroma(paletteId: string, step: Step, value: number): void {
@@ -177,12 +162,18 @@ export class Store {
 
     const delta = newValue - base[step];
     const changedIndex = STEPS.indexOf(step);
-    const decay = this.#state.settings.propagateDecay;
+    const spread = this.#state.settings.propagateDecay;
+
+    // Gaussian bell curve — creates a smooth bump centered on the dragged
+    // slider instead of an exponential taper.  σ² maps the 0.1–0.9 spread
+    // slider so d=1 barely moves at 0.1 and d=19 still shifts at 0.9.
+    const sigma = 0.3 + spread * spread * 15;
+    const twoSigmaSq = 2 * sigma * sigma;
 
     for (let i = 0; i < STEPS.length; i++) {
       const s = STEPS[i];
       const distance = Math.abs(i - changedIndex);
-      const weight = Math.pow(decay, Math.sqrt(distance));
+      const weight = Math.exp(-(distance * distance) / twoSigmaSq);
       const val = base[s] + delta * weight;
       curve[s] = snap(Math.max(0, Math.min(max, val)));
     }
@@ -219,12 +210,18 @@ export class Store {
 
   /** Create a store with the default palettes. */
   static default(): Store {
-    const lightness = bezierToCurve(BEZIER_PRESETS[0].controls);
+    const bezierControls = { ...BEZIER_PRESETS[0].controls };
+    const lightness = bezierToCurve(bezierControls);
     const palettes: Record<string, PaletteConfig> = {};
     for (const p of DEFAULT_PALETTES) {
       palettes[p.id] = makePalette(p.origin, p.name, lightness);
     }
-    return new Store({ lightness, palettes, settings: { ...DEFAULT_SETTINGS } });
+    return new Store({
+      bezierControls,
+      lightness,
+      palettes,
+      settings: { ...DEFAULT_SETTINGS },
+    });
   }
 }
 

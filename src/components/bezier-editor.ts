@@ -1,10 +1,10 @@
-import { svg, html, render } from "lit-html";
+import { html, render } from "lit-html";
 import { store } from "../state/store";
-import { STEPS } from "../state/types";
-import type { State, Curve } from "../state/types";
-import { type BezierControls, bezierYAtX, bezierToCurve, BEZIER_PRESETS } from "../state/bezier";
+import { type BezierControls } from "../state/types";
+import { BEZIER_PRESETS, findMatchingPreset } from "../state/bezier";
 import { snap } from "../state/derive";
 import { presetTip, startLightnessTip, endLightnessTip } from "./tool-tip-content";
+import { renderBezierSvg } from "./bezier-svg";
 import "./number-slider";
 
 // ---------------------------------------------------------------------------
@@ -13,10 +13,6 @@ import "./number-slider";
 
 const DEFAULT_HEIGHT = 200;
 const PAD = 0;
-const HANDLE_SIZE = 12;
-const HANDLE_DOT_SIZE = 4;
-const STEP_DIAMOND_SIZE = 8;
-const H_GRID_LINES = 4;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -68,6 +64,15 @@ class BezierEditor extends HTMLElement {
 
   connectedCallback() {
     this.#readAttrs();
+    // Hydrate from store (URL may have loaded different bezier controls)
+    const c = store.getState().bezierControls;
+    this.#p0y = c.p0y;
+    this.#p1x = c.p1x;
+    this.#p1y = c.p1y;
+    this.#p2x = c.p2x;
+    this.#p2y = c.p2y;
+    this.#p3y = c.p3y;
+    this.#activePresetKey = findMatchingPreset(c);
     this.#render();
     this.#unsub = store.subscribe(this.#onStoreChange);
   }
@@ -115,9 +120,6 @@ class BezierEditor extends HTMLElement {
   // Coordinate helpers
   // -------------------------------------------------------------------
 
-  #toX = (n: number) => PAD + n * this.#pw;
-  #toY = (n: number) => PAD + n * this.#ph;
-
   #fromX = (px: number) => Math.max(0, Math.min(1, (px - PAD) / this.#pw));
   #fromY = (py: number) => Math.max(0, Math.min(1, (py - PAD) / this.#ph));
 
@@ -139,8 +141,8 @@ class BezierEditor extends HTMLElement {
   // Store
   // -------------------------------------------------------------------
 
-  #pushCurve() {
-    store.setLightnessCurve(bezierToCurve(this.#controls));
+  #pushControls() {
+    store.setBezierControls(this.#controls);
   }
 
   get #controls(): BezierControls {
@@ -154,18 +156,17 @@ class BezierEditor extends HTMLElement {
     };
   }
 
-  #onStoreChange = (_state: State) => {
-    const curve = _state.lightness;
-    const matched = BEZIER_PRESETS.find((p) => curvesEqual(curve, bezierToCurve(p.controls)));
-    this.#activePresetKey = matched ? matched.key : null;
-    if (matched) {
-      this.#p0y = matched.controls.p0y;
-      this.#p1x = matched.controls.p1x;
-      this.#p1y = matched.controls.p1y;
-      this.#p2x = matched.controls.p2x;
-      this.#p2y = matched.controls.p2y;
-      this.#p3y = matched.controls.p3y;
-    }
+  /** Sync private state from the store (URL hydration, preset load, etc.). */
+  #onStoreChange = () => {
+    if (this.#dragging) return; // we are the source of truth during drag
+    const c = store.getState().bezierControls;
+    this.#p0y = c.p0y;
+    this.#p1x = c.p1x;
+    this.#p1y = c.p1y;
+    this.#p2x = c.p2x;
+    this.#p2y = c.p2y;
+    this.#p3y = c.p3y;
+    this.#activePresetKey = findMatchingPreset(c);
     this.#render();
   };
 
@@ -180,7 +181,7 @@ class BezierEditor extends HTMLElement {
 
     render(
       html`
-        <section class="the-grid">
+        <section class="the-grid gap-xl">
           <div class="the-grid__configuration">
             <h4 class="mb-l">Config</h4>
             <div class="stack gap-l pt-xl">
@@ -211,7 +212,7 @@ class BezierEditor extends HTMLElement {
                   <number-slider class="ml-auto">
                     <input
                       id="start-lightness"
-                      class="input origin-text border-default t-right"
+                      class="input origin-text border-default t-right fs-xs"
                       style="width:12ch"
                       type="number"
                       min="0"
@@ -228,7 +229,7 @@ class BezierEditor extends HTMLElement {
                   <number-slider class="ml-auto">
                     <input
                       id="end-lightness"
-                      class="input origin-text border-default t-right"
+                      class="input origin-text border-default t-right fs-xs"
                       style="width:12ch"
                       type="number"
                       min="0"
@@ -261,140 +262,16 @@ class BezierEditor extends HTMLElement {
   // -------------------------------------------------------------------
 
   #renderSvg() {
-    const h = this.#svgHeight;
-    const pw = this.#pw;
-    const ph = this.#ph;
-    const toX = this.#toX;
-    const toY = this.#toY;
-    const num = STEPS.length;
-    const c = this.#controls;
-
-    // Step diamonds — one per palette stop, centered in equal columns
-    const halfStep = STEP_DIAMOND_SIZE / 2;
-    const stepDiamonds = STEPS.map((_step, i) => {
-      const t = (i + 0.5) / num;
-      const y = bezierYAtX(t, c);
-      const cx = toX(t);
-      const cy = toY(y);
-      return svg`
-        <g transform="rotate(45 ${cx} ${cy})">
-          <rect
-            x="${cx - halfStep}" y="${cy - halfStep}"
-            width="${STEP_DIAMOND_SIZE}" height="${STEP_DIAMOND_SIZE}"
-            rx="1.5" ry="1.5"
-            class="bezier-editor__step-diamond"
-          />
-        </g>
-      `;
+    return renderBezierSvg({
+      height: this.#svgHeight,
+      plotWidth: this.#pw,
+      plotHeight: this.#ph,
+      controls: this.#controls,
+      dragging: this.#dragging,
+      onMove: this.#onMove,
+      onUp: this.#onUp,
+      onPointerDown: (e, w) => this.#start(e, w),
     });
-
-    // Vertical grid lines — column boundaries between step circles
-    const vGrid = Array.from({ length: num - 1 }, (_, i) => {
-      const x = PAD + ((i + 1) / num) * pw;
-      return svg`
-        <line x1="${x}" y1="${PAD}" x2="${x}" y2="${PAD + ph}" class="bezier-editor__grid-line" />
-      `;
-    });
-
-    // Horizontal grid lines — evenly spaced across the plot height
-    const hGrid = Array.from({ length: H_GRID_LINES }, (_, i) => {
-      const y = PAD + ((i + 1) / (H_GRID_LINES + 1)) * ph;
-      return svg`
-        <line x1="${PAD}" y1="${y}" x2="${PAD + pw}" y2="${y}" class="bezier-editor__grid-line" />
-      `;
-    });
-
-    // Anchor positions
-    const p0x = PAD;
-    const p0y = toY(c.p0y);
-    const p3x = PAD + pw;
-    const p3y = toY(c.p3y);
-
-    return svg`
-      <svg
-        width="100%" height="${h}"
-        class="bezier-editor__svg"
-        @pointermove=${this.#onMove}
-        @pointerup=${this.#onUp}
-        @pointerleave=${this.#onUp}
-      >
-        <!-- Plot background -->
-        <rect x="${PAD}" y="${PAD}" width="${pw}" height="${ph}" class="bezier-editor__plot-bg" rx="6" />
-
-        <g class="bezier-editor__grid">
-          ${vGrid}
-          ${hGrid}
-        </g>
-
-        <g class="bezier-editor__steps">
-          ${stepDiamonds}
-        </g>
-
-        <g class="bezier-editor__axes">
-          <line x1="${PAD}" y1="${PAD + ph}" x2="${PAD + pw}" y2="${PAD + ph}" class="bezier-editor__axis" />
-          <line x1="${PAD}" y1="${PAD + ph}" x2="${PAD}" y2="${PAD}" class="bezier-editor__axis" />
-        </g>
-
-        <g class="bezier-editor__curve">
-          <line x1="${p0x}" y1="${p0y}" x2="${toX(c.p1x)}" y2="${toY(c.p1y)}" class="bezier-editor__control-line" />
-          <line x1="${p3x}" y1="${p3y}" x2="${toX(c.p2x)}" y2="${toY(c.p2y)}" class="bezier-editor__control-line" />
-          ${this.#anchorHandle(p0x, p0y, this.#dragging === "p0", "p0")}
-          ${this.#handle(toX(c.p1x), toY(c.p1y), this.#dragging === "p1", "p1")}
-          ${this.#handle(toX(c.p2x), toY(c.p2y), this.#dragging === "p2", "p2")}
-          ${this.#anchorHandle(p3x, p3y, this.#dragging === "p3", "p3")}
-        </g>
-      </svg>
-    `;
-  }
-
-  /** Draggable diamond handle for P1 / P2. */
-  #handle(cx: number, cy: number, active: boolean, which: "p1" | "p2") {
-    const activeMod = active ? " bezier-editor__handle--active" : "";
-    const dotActiveMod = active ? " bezier-editor__handle-dot--active" : "";
-    const half = HANDLE_SIZE / 2;
-    const halfDot = HANDLE_DOT_SIZE / 2;
-    return svg`
-      <g transform="rotate(45 ${cx} ${cy})">
-        <rect
-          x="${cx - half}" y="${cy - half}"
-          width="${HANDLE_SIZE}" height="${HANDLE_SIZE}"
-          rx="2.5" ry="2.5"
-          class="bezier-editor__handle${activeMod}"
-          @pointerdown=${(e: PointerEvent) => this.#start(e, which)}
-        />
-        <rect
-          x="${cx - halfDot}" y="${cy - halfDot}"
-          width="${HANDLE_DOT_SIZE}" height="${HANDLE_DOT_SIZE}"
-          rx="1" ry="1"
-          class="bezier-editor__handle-dot${dotActiveMod}"
-        />
-      </g>
-    `;
-  }
-
-  /** Draggable diamond handle for P0 / P3 (endpoint anchors, vertical-only). */
-  #anchorHandle(cx: number, cy: number, active: boolean, which: "p0" | "p3") {
-    const activeMod = active ? " bezier-editor__handle--active" : "";
-    const dotActiveMod = active ? " bezier-editor__handle-dot--active" : "";
-    const half = HANDLE_SIZE / 2;
-    const halfDot = HANDLE_DOT_SIZE / 2;
-    return svg`
-      <g transform="rotate(45 ${cx} ${cy})">
-        <rect
-          x="${cx - half}" y="${cy - half}"
-          width="${HANDLE_SIZE}" height="${HANDLE_SIZE}"
-          rx="2.5" ry="2.5"
-          class="bezier-editor__handle bezier-editor__handle--anchor${activeMod}"
-          @pointerdown=${(e: PointerEvent) => this.#start(e, which)}
-        />
-        <rect
-          x="${cx - halfDot}" y="${cy - halfDot}"
-          width="${HANDLE_DOT_SIZE}" height="${HANDLE_DOT_SIZE}"
-          rx="1" ry="1"
-          class="bezier-editor__handle-dot${dotActiveMod}"
-        />
-      </g>
-    `;
   }
 
   // -------------------------------------------------------------------
@@ -440,7 +317,7 @@ class BezierEditor extends HTMLElement {
 
     this.#activePresetKey = findMatchingPreset(this.#controls);
     this.#render();
-    this.#pushCurve();
+    this.#pushControls();
   };
 
   #onUp = () => {
@@ -466,7 +343,7 @@ class BezierEditor extends HTMLElement {
       this.#p2y = preset.controls.p2y;
       this.#p3y = preset.controls.p3y;
       this.#activePresetKey = preset.key;
-      this.#pushCurve();
+      this.#pushControls();
       this.#render();
     }
   };
@@ -480,21 +357,21 @@ class BezierEditor extends HTMLElement {
     this.#p2y = c.p2y;
     this.#p3y = c.p3y;
     this.#activePresetKey = BEZIER_PRESETS[0].key;
-    this.#pushCurve();
+    this.#pushControls();
     this.#render();
   };
 
   #onStartChange = (e: Event) => {
     this.#p0y = 1 - parseFloat((e.target as HTMLInputElement).value);
     this.#activePresetKey = null;
-    this.#pushCurve();
+    this.#pushControls();
     this.#render();
   };
 
   #onEndChange = (e: Event) => {
     this.#p3y = 1 - parseFloat((e.target as HTMLInputElement).value);
     this.#activePresetKey = null;
-    this.#pushCurve();
+    this.#pushControls();
     this.#render();
   };
 
@@ -509,36 +386,7 @@ class BezierEditor extends HTMLElement {
 }
 
 // -------------------------------------------------------------------
-// Helpers
-// -------------------------------------------------------------------
-
-function curvesEqual(a: Curve, b: Curve): boolean {
-  for (const step of STEPS) {
-    if (a[step] !== b[step]) return false;
-  }
-  return true;
-}
-
-/** Match a BezierControls against presets by checking all six values. */
-function findMatchingPreset(c: BezierControls): string | null {
-  for (const p of BEZIER_PRESETS) {
-    if (
-      p.controls.p0y === c.p0y &&
-      p.controls.p1x === c.p1x &&
-      p.controls.p1y === c.p1y &&
-      p.controls.p2x === c.p2x &&
-      p.controls.p2y === c.p2y &&
-      p.controls.p3y === c.p3y
-    ) {
-      return p.key;
-    }
-  }
-  return null;
-}
-
-// -------------------------------------------------------------------
 // Define
 // -------------------------------------------------------------------
 
 customElements.define("bezier-editor", BezierEditor);
-export default BezierEditor;

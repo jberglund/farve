@@ -51,7 +51,7 @@ class PaletteOrigin extends HTMLElement {
         <div class="overlap">
 
         <label
-          class="origin-swatch"
+          class="origin-swatch self-stretch self-justify-end"
           for="origin-${this.#paletteId}"
           style="background-color: oklch(${this.#l.toFixed(3)} ${this.#c.toFixed(
             3,
@@ -68,7 +68,7 @@ class PaletteOrigin extends HTMLElement {
         <input
           id="origin-text-${this.#paletteId}"
           type="text"
-          class="input origin-text border-default"
+          class="input origin-text border-default fs-xs"
           .value=${hex}
           placeholder="#000000"
           aria-label="Origin color value"
@@ -138,4 +138,3 @@ class PaletteOrigin extends HTMLElement {
 }
 
 customElements.define("palette-origin", PaletteOrigin);
-export default PaletteOrigin;
