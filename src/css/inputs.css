@@ -112,7 +112,7 @@
   :where(.radio, .checkbox)::after {
     content: "";
     aspect-ratio: 1;
-    color: #000;
+    color: transparent;
     pointer-events: none;
     width: 90%;
     transition: color var(--interaction-transition-duration-quick)

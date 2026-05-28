@@ -34,7 +34,10 @@ class PaletteToolbar extends HTMLElement {
 
     render(
       html`
-        <div class="stack-horizontal justify-end gap-m items-stretch py-xl">
+        <div class="stack-horizontal gap-m items-stretch py-xl">
+          <a href="/farve/" style="text-decoration: none;" class="fs-m mr-auto text-mid"
+            >A color palette generator</a
+          >
           <button
             class="button"
             @click=${() => {

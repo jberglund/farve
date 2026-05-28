@@ -141,13 +141,15 @@ export class Store {
   /**
    * Replace the entire state — used when hydrating from URL.
    *
-   * The same invariant as the constructor applies: `lightness` must be
-   * consistent with `bezierControls`. The URL parser in url-sync.ts
-   * enforces this for the common path; backward-compat URLs (old `L=`
-   * format) intentionally break it to preserve the user's curve.
+   * Rebuilds `lightness` from `bezierControls` and recalculates all chroma
+   * curves to enforce the invariant that these are always consistent. This
+   * is a no-op for correctly-constructed state and a repair for anything
+   * that isn't.
    */
   load(state: State): void {
     this.#state = structuredClone(state);
+    this.#state.lightness = bezierToCurve(this.#state.bezierControls);
+    this.#recalculateAllChroma();
     this.#notify();
   }
 

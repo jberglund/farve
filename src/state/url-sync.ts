@@ -11,62 +11,93 @@ import { store, type Store } from "./store";
 import { snap } from "./derive";
 import { bezierToCurve } from "./bezier";
 
+// ---------------------------------------------------------------------------
+// URL format
+// ---------------------------------------------------------------------------
+// All numeric values are encoded as integers (×1000) to keep URLs compact.
+//
+// Example (abbreviated — real curves have 20 chroma values per palette):
+//   #b=15,750,55,250,760,800&p=primary:620,180,264:40,60,80,...:Primary;neutral:820,18,264:40,60,...:Neutral
+//
+// Keys:
+//   b=<p0y>,<p1x>,<p1y>,<p2x>,<p2y>,<p3y>   Bezier controls (×1000)
+//   p=<entries>                               Palettes, semicolon-delimited
+//   max-chroma=<int>                          Max chroma slider value (×1000, only if non-default)
+//   ceiling=<gamut>                           Ceiling gamut (only if non-default)
+//
+// Each palette entry:  id:origin:chroma:name
+//   origin  = <l>,<c>,<h>                     (×1000)
+//   chroma  = <v0>,<v1>,...<v19>              (×1000)
+//   name    = URI-encoded display name
+
+// ---------------------------------------------------------------------------
+// Parse
+// ---------------------------------------------------------------------------
+
 /**
  * Parse the URL hash fragment into application state.
- *
- * All numeric values are stored as integers (×1000) to keep the URL compact.
- * Example: #b=15,750,55,250,760,800&p1=40,60,80&p1-origin=620,180,264000
+ * Returns null if the URL is empty or irrecoverably malformed.
  */
 function parseHashParams(): State | null {
-  const raw = location.hash.slice(1); // strip leading #
+  const raw = location.hash.slice(1);
   if (!raw) return null;
 
   const params = new URLSearchParams(raw);
 
-  const bezierRaw = params.get("b");
-  let bezierControls: BezierControls | null;
-  let lightness: Curve | null;
+  // --- lightness / bezier ---
+  const lightnessData = parseLightnessData(params);
+  if (!lightnessData) return null;
 
-  if (bezierRaw) {
-    bezierControls = parseBezierControls(bezierRaw);
-    if (!bezierControls) return null;
-    lightness = bezierToCurve(bezierControls);
-  } else {
-    // Backward compat: old URLs stored the 20-step curve directly.
-    // Use the values for lightness and fall back to the S-curve default.
-    const lightnessRaw = params.get("L");
-    if (!lightnessRaw) return null;
-    lightness = parseCurve(lightnessRaw);
-    if (!lightness) return null;
-    bezierControls = { p0y: 0.015, p1x: 0.75, p1y: 0.055, p2x: 0.25, p2y: 0.76, p3y: 0.8 };
-  }
+  // --- palettes ---
+  const palettes = parsePalettes(params);
+  if (Object.keys(palettes).length === 0) return null;
+
+  // --- settings ---
+  const settings = parseSettings(params);
+
+  return { ...lightnessData, palettes, settings };
+}
+
+function parseLightnessData(params: URLSearchParams): {
+  bezierControls: BezierControls;
+  lightness: Curve;
+} | null {
+  const bezierRaw = params.get("b");
+  if (!bezierRaw) return null;
+
+  const bezierControls = parseBezierControls(bezierRaw);
+  if (!bezierControls) return null;
+
+  return { bezierControls, lightness: bezierToCurve(bezierControls) };
+}
+
+function parsePalettes(params: URLSearchParams): Record<string, PaletteConfig> {
+  const raw = params.get("p");
+  if (!raw) return {};
 
   const palettes: Record<string, PaletteConfig> = {};
 
-  for (const [key, val] of params) {
-    // Match p1, p2, etc. — but not p1-origin
-    const paletteMatch = key.match(/^p(\d+)$/);
-    if (!paletteMatch) continue;
+  for (const entry of raw.split(";")) {
+    const [id, originRaw, chromaRaw, ...rest] = entry.split(":");
+    if (!id || !originRaw || !chromaRaw) continue;
 
-    const chroma = parseCurve(val);
-    if (!chroma) continue;
+    const origin = parseOrigin(originRaw);
+    const chroma = parseCurve(chromaRaw);
+    if (!origin || !chroma) continue;
 
-    const originRaw = params.get(`${key}-origin`);
-    const origin = originRaw ? parseOrigin(originRaw) : { l: 0.5, c: 0.15, h: 264 };
+    // name is the remainder joined back — URI-encoded so it won't
+    // contain literal ":" in practice, but this is defensive.
+    const name = rest.length > 0 ? decodeURIComponent(rest.join(":")) : id;
 
-    const nameRaw = params.get(`${key}-name`);
-    const name = nameRaw ? decodeURIComponent(nameRaw) : key;
-
-    palettes[key] = { chroma, origin, name };
+    palettes[id] = { chroma, origin, name };
   }
 
-  // Require at least one palette
-  if (Object.keys(palettes).length === 0) return null;
-
-  const settings = parseSettings(params);
-
-  return { bezierControls, lightness, palettes, settings };
+  return palettes;
 }
+
+// ---------------------------------------------------------------------------
+// Serialize
+// ---------------------------------------------------------------------------
 
 /**
  * Serialize current state into a URL hash fragment.
@@ -75,28 +106,33 @@ function parseHashParams(): State | null {
 function syncToUrl(state: State): void {
   const c = state.bezierControls;
   const parts = [
-    `curve=${enc(c.p0y)},${enc(c.p1x)},${enc(c.p1y)},${enc(c.p2x)},${enc(c.p2y)},${enc(c.p3y)}`,
+    `b=${enc(c.p0y)},${enc(c.p1x)},${enc(c.p1y)},${enc(c.p2x)},${enc(c.p2y)},${enc(c.p3y)}`,
   ];
 
-  for (const [id, palette] of Object.entries(state.palettes)) {
-    parts.push(`${id}=${curveToString(palette.chroma)}`);
-    parts.push(
-      `${id}-origin=${enc(palette.origin.l)},${enc(palette.origin.c)},${enc(palette.origin.h)}`,
-    );
-    parts.push(`${id}-name=${encodeURIComponent(palette.name)}`);
-  }
+  const paletteEntries = Object.entries(state.palettes).map(([id, palette]) => {
+    // l and c are fractional (0–1 range), need ×1000 for precision.
+    // h is degrees (0–360), already an integer — no scaling needed.
+    const origin = `${enc(palette.origin.l)},${enc(palette.origin.c)},${Math.round(palette.origin.h)}`;
+    const chroma = curveToString(palette.chroma);
+    const name = encodeURIComponent(palette.name);
+    return `${id}:${origin}:${chroma}:${name}`;
+  });
+  parts.push(`p=${paletteEntries.join(";")}`);
 
   // Settings — only write non-default values to keep URLs clean
   if (state.settings.maxChroma !== DEFAULT_SETTINGS.maxChroma) {
-    parts.push(`max-chroma=${state.settings.maxChroma}`);
+    parts.push(`max-chroma=${enc(state.settings.maxChroma)}`);
   }
   if (state.settings.ceilingGamut !== DEFAULT_SETTINGS.ceilingGamut) {
     parts.push(`ceiling=${state.settings.ceilingGamut}`);
   }
 
-  const qs = parts.join("&");
-  history.replaceState(null, "", `#${qs}`);
+  history.replaceState(null, "", `#${parts.join("&")}`);
 }
+
+// ---------------------------------------------------------------------------
+// Wire up
+// ---------------------------------------------------------------------------
 
 /**
  * Wire up the store so every change automatically syncs to the URL.
@@ -117,16 +153,36 @@ export function initUrlSync(s: Store = store): () => void {
 
   let timer: ReturnType<typeof setTimeout> | null = null;
 
-  return s.subscribe((state) => {
+  const unsubscribe = s.subscribe((state) => {
     if (timer !== null) clearTimeout(timer);
     timer = setTimeout(() => {
       timer = null;
       syncToUrl(state);
     }, 400);
   });
+
+  // Flush any pending sync on unsubscribe or page unload so the last edit
+  // isn't lost when the user navigates away within the debounce window.
+  const flush = () => {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+      syncToUrl(s.getState());
+    }
+  };
+
+  window.addEventListener("beforeunload", flush);
+
+  return () => {
+    flush();
+    window.removeEventListener("beforeunload", flush);
+    unsubscribe();
+  };
 }
 
-// --- helpers ---
+// ---------------------------------------------------------------------------
+// Helpers — encode / decode
+// ---------------------------------------------------------------------------
 
 /** Encode a value to its integer representation (×1000). */
 function enc(n: number): number {
@@ -135,58 +191,72 @@ function enc(n: number): number {
 
 /** Decode an integer back, rounded to match snap precision. */
 function dec(n: number): number {
-  if (Number.isNaN(n)) return 0;
   return snap(n / 1000);
 }
 
+// ---------------------------------------------------------------------------
+// Helpers — parse individual fields
+// ---------------------------------------------------------------------------
+
 function parseBezierControls(raw: string): BezierControls | null {
   const parts = raw.split(",").map(Number);
-  if (parts.length !== 6) return null;
+  if (parts.length !== 6 || parts.some((n) => !Number.isFinite(n))) return null;
+  const [p0y, p1x, p1y, p2x, p2y, p3y] = parts as number[];
   return {
-    p0y: dec(parts[0]!),
-    p1x: dec(parts[1]!),
-    p1y: dec(parts[2]!),
-    p2x: dec(parts[3]!),
-    p2y: dec(parts[4]!),
-    p3y: dec(parts[5]!),
+    p0y: dec(p0y),
+    p1x: dec(p1x),
+    p1y: dec(p1y),
+    p2x: dec(p2x),
+    p2y: dec(p2y),
+    p3y: dec(p3y),
   };
 }
 
 function parseCurve(raw: string): Curve | null {
   const parts = raw.split(",").map(Number);
-  if (parts.length !== STEPS.length) return null;
-
-  // biome-ignore lint/style/noNonNullAssertion: checked length above
+  if (parts.length !== STEPS.length || parts.some((n) => !Number.isFinite(n))) return null;
   const curve = {} as Curve;
   for (let i = 0; i < STEPS.length; i++) {
-    // biome-ignore lint/style/noNonNullAssertion: checked length above
-    curve[STEPS[i]!] = dec(parts[i]!);
+    curve[STEPS[i]] = dec(parts[i]);
   }
   return curve;
 }
 
-function parseOrigin(raw: string): { l: number; c: number; h: number } {
+function parseOrigin(raw: string): { l: number; c: number; h: number } | null {
   const parts = raw.split(",").map(Number);
-  return {
-    l: dec(parts[0] ?? 500),
-    c: dec(parts[1] ?? 150),
-    h: dec(parts[2] ?? 264000),
-  };
+  if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) return null;
+  // l and c are ×1000 encoded; h is degrees, stored as-is.
+  const [l, c, h] = parts as number[];
+  return { l: dec(l), c: dec(c), h: Math.round(h) };
 }
 
 function parseSettings(params: URLSearchParams): AppSettings {
   const maxChromaRaw = params.get("max-chroma");
   const ceilingRaw = params.get("ceiling");
+
+  let maxChroma = DEFAULT_SETTINGS.maxChroma;
+  if (maxChromaRaw !== null) {
+    const n = Number(maxChromaRaw);
+    // max-chroma is encoded ×1000 like everything else
+    if (Number.isFinite(n)) maxChroma = dec(n);
+  }
+
+  const ceilingGamut =
+    ceilingRaw === "srgb" || ceilingRaw === "p3" || ceilingRaw === "rec2020"
+      ? ceilingRaw
+      : DEFAULT_SETTINGS.ceilingGamut;
+
   return {
-    maxChroma: maxChromaRaw ? parseFloat(maxChromaRaw) : DEFAULT_SETTINGS.maxChroma,
-    ceilingGamut:
-      ceilingRaw === "srgb" || ceilingRaw === "p3" || ceilingRaw === "rec2020"
-        ? ceilingRaw
-        : DEFAULT_SETTINGS.ceilingGamut,
+    maxChroma,
+    ceilingGamut,
     propagateChanges: DEFAULT_SETTINGS.propagateChanges,
     propagateDecay: DEFAULT_SETTINGS.propagateDecay,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Helpers — serialize individual fields
+// ---------------------------------------------------------------------------
 
 function curveToString(curve: Curve): string {
   return STEPS.map((s) => enc(curve[s])).join(",");
