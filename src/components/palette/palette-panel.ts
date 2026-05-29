@@ -154,8 +154,7 @@ class PalettePanel extends HTMLElement {
 
   #onStepChange = (e: Event) => {
     const { step, value } = (e as CustomEvent<{ step: Step; value: number }>).detail;
-    const { propagateChanges } = store.getState().settings;
-    store.setChroma(this.#paletteId, step, value, propagateChanges !== this.#shiftHeld);
+    store.setChroma(this.#paletteId, step, value, this.#shiftHeld);
   };
 
   #onOriginChange = (e: Event) => {

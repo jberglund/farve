@@ -140,6 +140,9 @@ function syncToUrl(state: State): void {
   if (state.settings.ceilingGamut !== DEFAULT_SETTINGS.ceilingGamut) {
     parts.push(`ceiling=${state.settings.ceilingGamut}`);
   }
+  if (state.settings.chromaSmoothFactor !== DEFAULT_SETTINGS.chromaSmoothFactor) {
+    parts.push(`chroma-smooth=${enc(state.settings.chromaSmoothFactor)}`);
+  }
 
   history.replaceState(null, "", `#${parts.join("&")}`);
 }
@@ -264,8 +267,8 @@ function parseSettings(params: URLSearchParams, steps: string[]): AppSettings {
     steps,
     maxChroma,
     ceilingGamut,
-    propagateChanges: DEFAULT_SETTINGS.propagateChanges,
     propagateDecay: DEFAULT_SETTINGS.propagateDecay,
+    chromaSmoothFactor: DEFAULT_SETTINGS.chromaSmoothFactor,
   };
 }
 

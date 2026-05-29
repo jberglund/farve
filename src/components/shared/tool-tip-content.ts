@@ -34,26 +34,34 @@ export const ceilingTip = html`
   </div>
 `;
 
-export const linkedEditingTip = html`
-  <div class="typeset">
-    <p>
-      When <strong>on</strong>, adjusting a swatch's chroma nudges neighboring steps too. This
-      creates smoother transitions instead of isolated jumps.
-    </p>
-    <p>Use <em>Spread</em> to control how far the ripple travels.</p>
-  </div>
-`;
-
 export const spreadTip = html`
   <div class="typeset">
-    <p>How far linked edits ripple outward.</p>
+    <p>How strongly linked edits ripple outward to neighboring steps.</p>
     <dl>
       <dt>0.1</dt>
       <dd>barely touches the next step over</dd>
       <dt>0.9</dt>
       <dd>spreads across nearly the whole palette</dd>
     </dl>
-    <p>Only active when <em>Linked editing</em> is enabled.</p>
+    <p>Only active when holding <kbd>Shift</kbd> while dragging.</p>
+  </div>
+`;
+
+export const chromaSmoothTip = html`
+  <div class="typeset">
+    <p>
+      Smooths the chroma curve so neighboring steps don't jump sharply. The raw gamut ceiling has
+      natural bumps — higher values iron those out.
+    </p>
+    <dl>
+      <dt>0</dt>
+      <dd>off — hugs the gamut ceiling exactly</dd>
+      <dt>0.5</dt>
+      <dd>light blur — softens local jaggies</dd>
+      <dt>1</dt>
+      <dd>heavy blur — gentle, even sweep</dd>
+    </dl>
+    <p>Applies when the origin color or lightness curve changes.</p>
   </div>
 `;
 

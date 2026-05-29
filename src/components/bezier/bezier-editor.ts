@@ -164,7 +164,10 @@ class BezierEditor extends HTMLElement {
                       `,
                     )}
                   </select>
-                  <button class="button" @click=${this.#onReset}>Reset curve</button>
+                  <button class="button" @click=${this.#onReset}>
+                    <svg class="icon" viewBox="0 0 24 24"><use href="#icon-reset" /></svg>
+                    Reset curve
+                  </button>
                 </div>
               </div>
             </div>
@@ -258,10 +261,9 @@ class BezierEditor extends HTMLElement {
 
   #onPointerDown = (e: PointerEvent, which: DragTarget) => {
     this.#dragging = which;
-    const svgEl = this.querySelector("svg");
+    const svgEl = this.querySelector<SVGSVGElement>(".bezier-editor__svg");
     svgEl?.setPointerCapture?.(e.pointerId);
     (e.target as Element).closest<SVGGElement>(".bezier-editor__handle-group")?.focus();
-    this.#render();
     e.preventDefault();
   };
 
@@ -269,7 +271,7 @@ class BezierEditor extends HTMLElement {
     const which = this.#dragging;
     if (!which) return;
 
-    const svgEl = this.querySelector("svg")!;
+    const svgEl = this.querySelector<SVGSVGElement>(".bezier-editor__svg")!;
     const rect = svgEl.getBoundingClientRect();
     const sx = this.#actualWidth / rect.width;
     const sy = this.#svgHeight / rect.height;
@@ -286,7 +288,14 @@ class BezierEditor extends HTMLElement {
     this.#commit();
   };
 
-  #onUp = () => {
+  #onUp = (e: PointerEvent) => {
+    // Setting pointer capture on the SVG triggers a spurious pointerleave on
+    // the original target (handle group). It bubbles to the SVG and would
+    // prematurely kill the drag. Ignore it when we have active capture.
+    if (e.type === "pointerleave" && this.#dragging) {
+      const svgEl = this.querySelector<SVGSVGElement>(".bezier-editor__svg");
+      if (svgEl?.hasPointerCapture?.(e.pointerId)) return;
+    }
     if (!this.#dragging) return;
     this.#dragging = null;
     this.#render();

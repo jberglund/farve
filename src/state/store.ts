@@ -27,8 +27,9 @@ function makePalette(
   name: string,
   lightness: Curve,
   steps: string[],
+  smoothFactor: number,
 ): PaletteConfig {
-  return { chroma: deriveChromaCurve(origin, lightness, steps), origin, name };
+  return { chroma: deriveChromaCurve(origin, lightness, steps, { smoothFactor }), origin, name };
 }
 
 export class Store {
@@ -77,12 +78,12 @@ export class Store {
     this.#scheduleNotify();
   }
 
-  setChroma(paletteId: string, step: Step, value: number, propagate?: boolean): void {
+  setChroma(paletteId: string, step: Step, value: number, propagate: boolean): void {
     const palette = this.#state.palettes[paletteId];
     if (!palette) return;
 
     const max = this.#state.settings.maxChroma;
-    if (propagate ?? this.#state.settings.propagateChanges) {
+    if (propagate) {
       this.#propagate(palette.chroma, step, value, max);
     } else {
       palette.chroma[step] = snap(Math.max(0, Math.min(max, value)));
@@ -96,7 +97,9 @@ export class Store {
 
     const origin = { l, c, h };
     palette.origin = origin;
-    palette.chroma = deriveChromaCurve(origin, this.#state.lightness, this.#state.settings.steps);
+    palette.chroma = deriveChromaCurve(origin, this.#state.lightness, this.#state.settings.steps, {
+      smoothFactor: this.#state.settings.chromaSmoothFactor,
+    });
     this.#scheduleNotify();
   }
 
@@ -127,6 +130,7 @@ export class Store {
       id,
       this.#state.lightness,
       this.#state.settings.steps,
+      this.#state.settings.chromaSmoothFactor,
     );
     this.#notify();
   }
@@ -147,13 +151,14 @@ export class Store {
     this.#scheduleNotify();
   }
 
-  setPropagateChanges(value: boolean): void {
-    this.#state.settings.propagateChanges = value;
+  setPropagateDecay(value: number): void {
+    this.#state.settings.propagateDecay = value;
     this.#scheduleNotify();
   }
 
-  setPropagateDecay(value: number): void {
-    this.#state.settings.propagateDecay = value;
+  setChromaSmoothFactor(value: number): void {
+    this.#state.settings.chromaSmoothFactor = value;
+    this.#recalculateAllChroma();
     this.#scheduleNotify();
   }
 
@@ -238,6 +243,7 @@ export class Store {
       palette.origin,
       this.#state.lightness,
       this.#state.settings.steps,
+      { smoothFactor: this.#state.settings.chromaSmoothFactor },
     );
   }
 
@@ -292,7 +298,13 @@ export class Store {
     const lightness = bezierToCurve(bezierControls, settings.steps);
     const palettes: Record<string, PaletteConfig> = {};
     for (const p of DEFAULT_PALETTES) {
-      palettes[p.id] = makePalette(p.origin, p.name, lightness, settings.steps);
+      palettes[p.id] = makePalette(
+        p.origin,
+        p.name,
+        lightness,
+        settings.steps,
+        settings.chromaSmoothFactor,
+      );
     }
     return new Store({
       bezierControls,

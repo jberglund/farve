@@ -25,7 +25,7 @@ export interface BezierSvgProps {
   endValue: number;
   dragging: DragTarget | null;
   onMove: (e: PointerEvent) => void;
-  onUp: () => void;
+  onUp: (e: PointerEvent) => void;
   onPointerDown: (e: PointerEvent, which: DragTarget) => void;
   onKeyDown: (e: KeyboardEvent, which: DragTarget) => void;
 }

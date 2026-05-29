@@ -1,14 +1,10 @@
 import { html, render } from "lit-html";
-import { live } from "lit-html/directives/live.js";
 import { store } from "../../state/store";
-import "../shared/number-slider";
-import { toolTip } from "../shared/tool-tip";
-import { linkedEditingTip, spreadTip } from "../shared/tool-tip-content";
 import type { State } from "../../state/types";
 
 /**
  * Header bar above the palette list.
- * Left: "Palettes" heading + add button. Right: Linked editing + Spread.
+ * Left: "Palettes" heading + add button. Right: Linked editing hint.
  */
 class PalettesHeader extends HTMLElement {
   #unsub: (() => void) | null = null;
@@ -23,8 +19,6 @@ class PalettesHeader extends HTMLElement {
   }
 
   #render() {
-    const { settings } = store.getState();
-
     render(
       html`
         <div class="stack-horizontal gap-m items-center mb-2xl">
@@ -35,36 +29,9 @@ class PalettesHeader extends HTMLElement {
           </button>
 
           <div class="stack-horizontal gap-m ml-auto items-stretch">
-            <label class=" inline-flex items-center gap-xs" hotkey-key="l" hotkey-restore-focus>
-              <input
-                id="linked-editing"
-                data-size="small"
-                class="checkbox"
-                type="checkbox"
-                .checked=${settings.propagateChanges}
-                @change=${this.#onPropagateToggle}
-              />
-              <span class="label"
-                >Linked editing ${toolTip("linked-editing-tip", linkedEditingTip)}</span
-              >
-            </label>
-
-            <label class=" inline-flex items-center gap-xs">
-              <span class="label">Spread ${toolTip("spread-tip", spreadTip)}</span>
-              <number-slider>
-                <input
-                  id="spread-decay"
-                  class="input"
-                  type="number"
-                  min="0.1"
-                  max="0.9"
-                  step="0.05"
-                  .value=${live(String(settings.propagateDecay))}
-                  ?disabled=${!settings.propagateChanges}
-                  @input=${this.#onPropagateDecayInput}
-                />
-              </number-slider>
-            </label>
+            <span class="label inline-flex items-center gap-xs">
+              Hold <kbd class="keycap">Shift</kbd> while dragging to link edits
+            </span>
           </div>
         </div>
       `,
@@ -77,16 +44,6 @@ class PalettesHeader extends HTMLElement {
   };
 
   #addPalette = () => store.addDefaultPalette();
-
-  #onPropagateToggle = (e: Event) => {
-    const checked = (e.target as HTMLInputElement).checked;
-    store.setPropagateChanges(checked);
-  };
-
-  #onPropagateDecayInput = (e: Event) => {
-    const value = parseFloat((e.target as HTMLInputElement).value);
-    if (!isNaN(value)) store.setPropagateDecay(value);
-  };
 }
 
 customElements.define("palettes-header", PalettesHeader);

@@ -1,13 +1,14 @@
 import { html } from "lit-html";
+import { popoverHeader } from "./popover-header";
 
 /**
  * Returns a `?` button and anchored popover. The popover's `id` must be unique
  * per page and is used to wire `popovertarget` ↔ `id`.
  *
  * Usage:
- *   ${toolTip("my-tip", html`<p>Help text here.</p>`)}
+ *   ${toolTip("my-tip", "My Title", html`<p>Help text here.</p>`)}
  */
-export function toolTip(id: string, content: unknown) {
+export function toolTip(id: string, title: string, content: unknown) {
   return html`
     <button class="tt-trigger" popovertarget="${id}">
       <svg class="tt-icon" viewBox="0 0 24 24"><use href="#icon-info"></use></svg>
@@ -18,7 +19,7 @@ export function toolTip(id: string, content: unknown) {
       popover
       role="tooltip"
     >
-      ${content}
+      ${popoverHeader(title)} ${content}
     </div>
   `;
 }

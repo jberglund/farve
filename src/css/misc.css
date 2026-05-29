@@ -11,14 +11,14 @@
   border-radius: inherit;
 }
 .br-s {
-  border-radius: 4px;
+  border-radius: var(--radius-s);
 }
 .br-m {
-  border-radius: 6px;
+  border-radius: var(--radius-m);
 }
 .br-l {
-  border-radius: 8px;
+  border-radius: var(--radius-l);
 }
 .br-xl {
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
 }

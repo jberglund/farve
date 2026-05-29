@@ -14,6 +14,11 @@
   --spacing-5xl: calc(8 * var(--base-font-size));
   --spacing-6xl: calc(12 * var(--base-font-size));
 
+  --radius-s: 4px;
+  --radius-m: 6px;
+  --radius-l: 8px;
+  --radius-xl: 12px;
+
   --typescale: 1.2;
   --font-size-xs: calc(var(--base-font-size) * pow(var(--typescale), -2));
   --font-size-s: calc(var(--base-font-size) * pow(var(--typescale), -1));

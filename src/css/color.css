@@ -22,6 +22,9 @@
 
 /* Surfaces */
 
+.surface-sunken {
+  background-color: var(--surface-sunken);
+}
 .surface-default {
   background-color: var(--surface-default);
 }
@@ -42,6 +45,13 @@
 
 .border-default {
   border: 1px solid var(--border-default);
+}
+
+.border-weak {
+  border: 1px solid var(--border-weak);
+}
+.border-strong {
+  border: 1px solid var(--border-strong);
 }
 
 .border-bottom-default {

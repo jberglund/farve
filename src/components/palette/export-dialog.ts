@@ -2,6 +2,7 @@ import { html, render } from "lit-html";
 import { live } from "lit-html/directives/live.js";
 import { store } from "../../state/store";
 import { generateExport, FORMAT_LABELS, type ExportFormat } from "../../export";
+import { popoverHeader } from "../shared/popover-header";
 import type { State } from "../../state/types";
 
 /**
@@ -79,10 +80,9 @@ class ExportDialog extends HTMLElement {
 
     render(
       html`
-        <div class="export-dialog border-default shadow-dialog p-0" popover="auto">
-          <div class="stack gap-m p-l">
-            <h2 class="fs-l m-0">Export Palettes</h2>
-
+        <div class="export-dialog border-default shadow-dialog p-m" popover="auto">
+          ${popoverHeader("Export Palettes", "#icon-export")}
+          <div class="stack gap-m">
             <!-- Top row: format + prefix, full width -->
             <div class="stack-horizontal gap-m items-end">
               <label class="stack gap-3xs flex-1">

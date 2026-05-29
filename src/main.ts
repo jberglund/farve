@@ -8,6 +8,7 @@ import "./components/palette/palette-toolbar";
 import "./components/palette/palettes-header";
 import "./components/palette/palettes-footer";
 import "./components/palette/export-dialog";
+import "./components/palette/palettes-preview";
 
 import { initHotkeys } from "./utils/hotkey";
 import { initUrlSync } from "./state";

@@ -42,6 +42,12 @@ export function deriveSwatches(state: State, paletteId: string): Swatch[] {
 /** Gamut used as the ceiling when deriving chroma curves. */
 const DERIVATION_GAMUT = "srgb";
 
+/** Options for {@link deriveChromaCurve}. */
+export interface ChromaCurveOptions {
+  /** 0–1. 0 = hug the gamut ceiling exactly. 1 = maximally smooth. */
+  smoothFactor?: number;
+}
+
 /**
  * Derive a chroma curve that respects the gamut boundary for the origin's hue.
  *
@@ -55,23 +61,81 @@ const DERIVATION_GAMUT = "srgb";
  * - Reds:   peak at mid L, tapering at both ends
  * - Yellows: peak at high L, low at the dark end
  *
+ * Set `opts.smoothFactor` > 0 to apply a Gaussian blur across the ceiling
+ * before multiplying by the fill ratio. This irons out local jaggies in the
+ * gamut boundary while preserving each hue's characteristic overall shape.
+ *
  * @param origin     The origin color (all three of `.l`, `.c`, `.h` are used)
  * @param lightness  Per-step lightness values (e.g. state.lightness)
+ * @param opts       Optional smoothing configuration
  */
 export function deriveChromaCurve(
   origin: { l: number; c: number; h: number },
   lightness: Curve,
   steps: string[],
+  opts?: ChromaCurveOptions,
 ): Curve {
   const maxOriginC = maxInGamutChroma(origin.l, origin.h, DERIVATION_GAMUT);
   const fillRatio = maxOriginC > 0 ? clamp01(origin.c / maxOriginC) : 0;
 
+  // Build the raw ceiling array
+  const ceilings = steps.map((step) =>
+    maxInGamutChroma(lightness[step], origin.h, DERIVATION_GAMUT),
+  );
+
+  // Optionally smooth
+  const smoothFactor = opts?.smoothFactor ?? 0;
+  const smoothed = smoothFactor > 0 ? smoothCeilings(ceilings, smoothFactor) : ceilings;
+
   const result = {} as Curve;
-  for (const step of steps) {
-    const l = lightness[step];
-    const ceiling = maxInGamutChroma(l, origin.h, DERIVATION_GAMUT);
-    result[step] = snap(ceiling * fillRatio);
+  for (let i = 0; i < steps.length; i++) {
+    result[steps[i]] = snap(smoothed[i] * fillRatio);
   }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Ceiling smoothing
+// ---------------------------------------------------------------------------
+
+/** Maps smoothFactor (0–1) → sigma for the Gaussian kernel. */
+const SMOOTH_SIGMA_MIN = 0;
+const SMOOTH_SIGMA_SCALE = 8;
+
+/**
+ * Apply a Gaussian blur to an array of ceiling values.
+ *
+ * Isolated so it can be swapped for a different smoothing strategy
+ * (e.g. a polynomial fit) without touching any other code.
+ *
+ * @param values  Raw ceiling chroma values, one per step
+ * @param factor  0–1. 0 returns `values` unchanged; 1 is maximally smooth.
+ * @returns A new array of smoothed values (never mutates the input).
+ */
+export function smoothCeilings(values: number[], factor: number): number[] {
+  if (factor <= 0 || values.length < 2) return [...values];
+
+  // Quadratic mapping so the slider feels useful across the full range.
+  // factor 0.5 → sigma 2 (light blur), factor 1 → sigma 8 (heavy blur).
+  const sigma = SMOOTH_SIGMA_MIN + factor * factor * SMOOTH_SIGMA_SCALE;
+  const twoSigmaSq = 2 * sigma * sigma;
+
+  const n = values.length;
+  const result = new Array<number>(n);
+
+  for (let i = 0; i < n; i++) {
+    let sum = 0;
+    let weightSum = 0;
+    for (let j = 0; j < n; j++) {
+      const dist = i - j;
+      const weight = Math.exp(-(dist * dist) / twoSigmaSq);
+      sum += values[j] * weight;
+      weightSum += weight;
+    }
+    // Renormalize so the kernel always sums to 1 (important near edges)
+    result[i] = snap(sum / weightSum);
+  }
+
   return result;
 }
 

@@ -49,10 +49,11 @@ export interface AppSettings {
   maxChroma: number;
   /** Gamut used for the ceiling / danger-zone on chroma sliders. */
   ceilingGamut: "srgb" | "p3" | "rec2020";
-  /** When true, slider changes ripple outward to neighboring steps. */
-  propagateChanges: boolean;
   /** Decay factor for change propagation (0–1). Higher = broader spread. */
   propagateDecay: number;
+  /** Smoothing factor for the chroma ceiling curve (0–1). 0 = hug the gamut
+   *  ceiling exactly. 1 = maximally smooth. */
+  chromaSmoothFactor: number;
 }
 
 /** Default app settings — single source of truth for initial values. */
@@ -60,8 +61,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   steps: [...DEFAULT_STEPS],
   maxChroma: 0.35,
   ceilingGamut: "p3",
-  propagateChanges: true,
   propagateDecay: 0.5,
+  chromaSmoothFactor: 0,
 };
 
 /**

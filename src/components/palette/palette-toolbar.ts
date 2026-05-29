@@ -3,8 +3,10 @@ import { live } from "lit-html/directives/live.js";
 import { store } from "../../state/store";
 import "../shared/number-slider";
 import { openExportDialog } from "./export-dialog";
+import { openPalettesPreview } from "./palettes-preview";
 import { toolTip } from "../shared/tool-tip";
-import { maxChromaTip, ceilingTip } from "../shared/tool-tip-content";
+import { popoverHeader } from "../shared/popover-header";
+import { maxChromaTip, ceilingTip, spreadTip, chromaSmoothTip } from "../shared/tool-tip-content";
 import { getCurrentTheme, toggleTheme } from "../../theme";
 import { DEFAULT_STEPS } from "../../state";
 import type { State, AppSettings } from "../../state/types";
@@ -54,6 +56,10 @@ class PaletteToolbar extends HTMLElement {
             </svg>
             ${theme === "dark" ? "Light" : "Dark"}
           </button>
+          <button class="button" @click=${openPalettesPreview}>
+            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-eye" /></svg>
+            Preview
+          </button>
           <button class="button" @click=${openExportDialog}>
             <svg class="icon" viewBox="0 0 24 24"><use href="#icon-export" /></svg>
             Export
@@ -64,13 +70,14 @@ class PaletteToolbar extends HTMLElement {
           </button>
           <div
             id="advanced-popover"
-            class="advanced-popover border-default surface-raised shadow-dialog mt-xs"
+            class="advanced-popover border-default surface-raised shadow-dialog mt-xs p-m"
             popover="auto"
           >
-            <div class="stack gap-s p-m ">
+            ${popoverHeader("Advanced config", "#icon-advanced")}
+            <div class="stack gap-s">
               <label class="p-2xs stack-horizontal items-center gap-xs  surface-raised">
                 <span class="label mr-auto"
-                  >Max chroma ${toolTip("max-chroma-tip", maxChromaTip)}</span
+                  >Max chroma ${toolTip("max-chroma-tip", "Max chroma", maxChromaTip)}</span
                 >
                 <number-slider>
                   <input
@@ -89,7 +96,8 @@ class PaletteToolbar extends HTMLElement {
 
               <div class="p-2xs surface-raised ">
                 <span class="label fs-s"
-                  >Target colorspace ${toolTip("target-colorspace-tip", ceilingTip)}</span
+                  >Target colorspace
+                  ${toolTip("target-colorspace-tip", "Target colorspace", ceilingTip)}</span
                 >
                 <div class="stack-horizontal gap-m mt-xs">
                   ${CEILING_OPTIONS.map(
@@ -109,6 +117,46 @@ class PaletteToolbar extends HTMLElement {
                   )}
                 </div>
               </div>
+
+              <label class="p-2xs stack-horizontal items-center gap-xs  surface-raised">
+                <span class="label mr-auto"
+                  >Linked edit strength
+                  ${toolTip("spread-tip", "Linked edit strength", spreadTip)}</span
+                >
+                <number-slider>
+                  <input
+                    id="propagate-decay"
+                    class="input t-right"
+                    style="width: 10ch;"
+                    type="number"
+                    min="0.1"
+                    max="0.9"
+                    step="0.05"
+                    .value=${live(String(settings.propagateDecay))}
+                    @input=${this.#onPropagateDecayInput}
+                  />
+                </number-slider>
+              </label>
+
+              <label class="p-2xs stack-horizontal items-center gap-xs  surface-raised">
+                <span class="label mr-auto"
+                  >Curve smoothness
+                  ${toolTip("chroma-smooth-tip", "Curve smoothness", chromaSmoothTip)}</span
+                >
+                <number-slider>
+                  <input
+                    id="chroma-smooth"
+                    class="input t-right"
+                    style="width: 10ch;"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    .value=${live(String(settings.chromaSmoothFactor))}
+                    @input=${this.#onChromaSmoothInput}
+                  />
+                </number-slider>
+              </label>
 
               <div class="stack gap-2xs p-2xs surface-raised ">
                 <span class="label fs-s">Steps</span>
@@ -130,7 +178,7 @@ class PaletteToolbar extends HTMLElement {
                   ? html`<span class="fs-xs" style="color: var(--gamut-warning)"
                       >${this.#stepsError}</span
                     >`
-                  : html`<span class="fs-xs text-low"
+                  : html`<span class="fs-xs text-low mt-xs"
                       >Comma-separated step names. ${settings.steps.length} steps currently.</span
                     >`}
               </div>
@@ -156,6 +204,16 @@ class PaletteToolbar extends HTMLElement {
   #onCeilingChange = (e: Event) => {
     const value = (e.target as HTMLInputElement).value as AppSettings["ceilingGamut"];
     store.setCeilingGamut(value);
+  };
+
+  #onPropagateDecayInput = (e: Event) => {
+    const value = parseFloat((e.target as HTMLInputElement).value);
+    if (!isNaN(value)) store.setPropagateDecay(value);
+  };
+
+  #onChromaSmoothInput = (e: Event) => {
+    const value = parseFloat((e.target as HTMLInputElement).value);
+    if (!isNaN(value)) store.setChromaSmoothFactor(value);
   };
 
   // --- Steps ---
