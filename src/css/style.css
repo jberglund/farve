@@ -9,6 +9,7 @@
 @import "./misc.css";
 @import "./defaults.css";
 @import "./typography.css";
+@import "./palette-panel.css";
 @import "./bezier-editor.css";
 @import "./stagger-reveal.css";
 
@@ -164,60 +165,6 @@ kbd {
 .tt-popover {
   max-width: 280px;
   min-width: 200px;
-}
-
-.palette-grid {
-  display: grid;
-  grid-auto-columns: minmax(max-content, 1fr);
-  grid-auto-flow: column;
-
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  overflow: clip;
-}
-
-step-slider:not(:last-child) {
-  border-right: 1px solid var(--border-default);
-}
-
-.step-item {
-  height: 100%;
-  min-height: 12rem;
-  max-height: 12rem;
-}
-
-.palette-origin {
-  grid-area: configuration;
-}
-
-/* Origin swatch — clickable preview that opens the hidden color picker */
-.origin-swatch {
-  width: 1rem;
-  margin: var(--spacing-xs);
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  z-index: 10;
-}
-
-.palette-swatch {
-  height: 8rem;
-  position: relative;
-}
-
-.swatch-gamut-badge {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  line-height: 1;
-  padding: 2px 5px;
-  border-radius: 3px;
-  background: oklch(0 0 0 / 0.55);
-  color: oklch(1 0 0);
-  pointer-events: none;
-  user-select: none;
 }
 
 /* ------------------------------------------------------------------ */

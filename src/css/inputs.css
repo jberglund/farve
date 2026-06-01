@@ -49,7 +49,7 @@
   :where(.input, .select, .textarea, .radio, .checkbox):where([data-size="large"]) {
     --_input-height: var(--size-control-height-large);
     --_input-font-size: var(--font-size-m);
-    --_input-padding-inline: var(--spacing-m);
+    --_input-padding-inline: var(--spacing-xs);
     --_input-padding-block: 0;
   }
 
@@ -247,13 +247,6 @@
 /* ------------------------------------------------------------------ */
 /* Range inputs                                                        */
 /* ------------------------------------------------------------------ */
-
-:where(.range-input)[orient="vertical"] {
-  writing-mode: vertical-lr;
-  direction: rtl;
-  width: 100%;
-  cursor: ns-resize;
-}
 
 :where(.range-input) {
   --wrapper-height: 30px;

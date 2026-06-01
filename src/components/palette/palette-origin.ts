@@ -79,7 +79,7 @@ class PaletteOrigin extends HTMLElement {
               />
             </div>
           </div>
-          <div class="mt-auto p-2xs">
+          <div class="mt-auto p-2xs" hidden>
             <span>=</span>
             <div class="inline-flex gap-xs fs-xs t-tabular text-mid">
               <span> L </span>

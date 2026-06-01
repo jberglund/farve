@@ -56,7 +56,7 @@ class PalettePanel extends HTMLElement {
       html`
         <section class="stack gap-l">
           <div class=" stack-horizontal gap-s items-end">
-            <label class="stack gap-2xs" for="palette-name-${this.#paletteId}">
+            <label class="stack gap-2xs flex-1" for="palette-name-${this.#paletteId}">
               <div class="label">Name</div>
               <input
                 id="palette-name-${this.#paletteId}"
@@ -70,29 +70,41 @@ class PalettePanel extends HTMLElement {
               />
             </label>
 
-            <palette-origin
-              palette-id="${this.#paletteId}"
-              l="${palette.origin.l}"
-              c="${palette.origin.c}"
-              h="${palette.origin.h}"
-            ></palette-origin>
-            <div class="ml-auto stack-horizontal gap-s">
-              <button class="button" title="Clone palette" @click=${this.#onCloneClick}>
-                <svg class="icon" viewBox="0 0 24 24"><use href="#icon-clone" /></svg>
-                Clone
-              </button>
-              <button
-                class="button"
-                title="Remove palette"
-                ?disabled=${paletteCount <= 1}
-                @click=${this.#onRemoveClick}
+            <div class=" stack-horizontal items-end gap-s">
+              <palette-origin
+                class="flex-1"
+                palette-id="${this.#paletteId}"
+                l="${palette.origin.l}"
+                c="${palette.origin.c}"
+                h="${palette.origin.h}"
+              ></palette-origin>
+              <div
+                class="stack-horizontal gap-xs"
+                style="min-height: var(--size-control-height-large)"
               >
-                <svg class="icon" viewBox="0 0 24 24"><use href="#icon-remove" /></svg>
-                Remove
-              </button>
+                <button
+                  class="button"
+                  data-variant="plain"
+                  title="Clone palette"
+                  @click=${this.#onCloneClick}
+                >
+                  <svg class="icon" viewBox="0 0 24 24"><use href="#icon-clone" /></svg>
+                  Clone
+                </button>
+                <button
+                  class="button"
+                  data-variant="plain"
+                  title="Remove palette"
+                  ?disabled=${paletteCount <= 1}
+                  @click=${this.#onRemoveClick}
+                >
+                  <svg class="icon" viewBox="0 0 24 24"><use href="#icon-remove" /></svg>
+                  Remove
+                </button>
+              </div>
             </div>
           </div>
-          <div class="stack gap-m overflow-scroll">
+          <div class="palette-body">
             <div class="palette-grid" data-palette-grid>
               ${swatches.map(
                 (swatch) => html`

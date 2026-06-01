@@ -15,7 +15,7 @@ import { live } from "lit-html/directives/live.js";
  */
 class StepSlider extends HTMLElement {
   static get observedAttributes() {
-    return ["step-key", "value", "min", "max", "orient", "show-label", "ceiling"];
+    return ["step-key", "value", "min", "max", "orient", "ceiling"];
   }
 
   connectedCallback() {
@@ -24,14 +24,12 @@ class StepSlider extends HTMLElement {
     const min = this.getAttribute("min") ?? "0";
     const max = this.getAttribute("max") ?? "1";
     const orient = this.getAttribute("orient") ?? "vertical";
-    const showLabel = this.hasAttribute("show-label");
     const ceiling = this.getAttribute("ceiling");
 
     // Light DOM — inherits global CSS from inputs.css and form-controls.css
     render(
       html`
-        <label class="step-item stack items-center">
-          <span class="fs-xs mb-xs" ?hidden=${!showLabel}>${stepKey}</span>
+        <div class="step-item ">
           <div class="slider-track">
             <div class="ceiling-zone"></div>
             <input
@@ -57,7 +55,7 @@ class StepSlider extends HTMLElement {
             step="0.001"
             @input=${this.#onNumberInput}
           />
-        </label>
+        </div>
       `,
       this,
     );

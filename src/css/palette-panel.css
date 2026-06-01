@@ -1,0 +1,219 @@
+/* ------------------------------------------------------------------ */
+/* Step-slider component                                              */
+/* ------------------------------------------------------------------ */
+
+step-slider {
+  --ceiling-pos: 100; /* unitless 0–100, default: no danger zone */
+  container-type: size;
+  container-name: step-slider;
+}
+
+/* Track — the wrapper that contains the ceiling overlay and the range input */
+.slider-track {
+  position: relative;
+  height: 100cqh;
+  width: 100%;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+/* Gamut-ceiling overlay — slides to reveal a "danger zone" beyond ceiling */
+.ceiling-zone {
+  position: absolute;
+  /*height: 100cqh;*/
+  inset: 0;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border-strong);
+  transform: translateY(calc(var(--ceiling-pos) * -1%));
+  pointer-events: none;
+  transition: transform 300ms ease-out;
+  @container step-slider (orientation: landscape) {
+    border-bottom: none;
+    border-left: 1px solid var(--border-strong);
+    transform: translateX(calc((var(--ceiling-pos)) * 1%));
+  }
+}
+
+step-slider[out-of-gamut] .ceiling-zone {
+  background: var(--gamut-warning);
+}
+
+/* Range input fills the track, transparent so overlays show through */
+.slider-track .range-input {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+}
+
+/* Per-step number input (below the slider) */
+.step-number {
+  width: 100%;
+  text-align: right;
+  border: 1px solid var(--surface-raised);
+  border-radius: 0;
+  color: var(--text-mid);
+  border-top: 1px solid var(--border-default);
+  background: var(--surface-raised);
+  padding: 0px var(--spacing-2xs);
+  appearance: textfield;
+  outline-offset: -1px;
+}
+
+.step-number:focus-visible {
+  background-color: var(--surface-sunken);
+  outline: 1px solid;
+}
+
+/* Each step-slider is a column in the palette grid */
+.step-item {
+  height: 100%;
+  @container step-slider (orientation: portrait) {
+    min-height: 12rem;
+    max-height: 12rem;
+    display: flex;
+    flex-direction: column;
+  }
+  @container step-slider (orientation: landscape) {
+    display: grid;
+    grid-template-columns: 1fr 5ch;
+  }
+}
+
+/* Border between adjacent sliders in the palette grid */
+step-slider:not(:last-child) {
+  border-right: 1px solid var(--border-default);
+}
+
+/* ------------------------------------------------------------------ */
+/* Vertical range input (the default desktop orientation)              */
+/* ------------------------------------------------------------------ */
+
+:where(.range-input)[orient="vertical"] {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 100%;
+  cursor: ns-resize;
+}
+
+/* ------------------------------------------------------------------ */
+/* Step-slider: flip to horizontal when the element is wider than tall */
+/* ------------------------------------------------------------------ */
+
+@container step-slider (orientation: landscape) {
+  :where(.range-input)[orient="vertical"] {
+    writing-mode: horizontal-tb;
+    direction: ltr;
+    cursor: ew-resize;
+    /* Swap thumb dimensions so it reads as a vertical bar */
+    --thumb-width: 4px;
+    --thumb-height: 0.75rem;
+  }
+
+  /* Give the track a fixed height instead of stretching */
+  .slider-track {
+    flex: unset;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Palette panel layout                                               */
+/* ------------------------------------------------------------------ */
+
+.palette-grid {
+  display: grid;
+  grid-auto-columns: minmax(max-content, 1fr);
+  grid-auto-flow: column;
+
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  overflow: clip;
+}
+
+/* A definite row height is required for step-slider's contain:size.
+   On desktop the grid flows into columns, so the single implicit row
+   gets this height — giving each step-slider a tall, narrow (portrait)
+   shape that keeps the range input vertical. */
+.palette-grid[data-editor="chroma"] {
+  grid-auto-rows: 12rem;
+}
+
+/* Grid wrapper that contains the swatch grid and the slider grid.
+   On desktop the two grids stack vertically; on mobile they sit
+   side-by-side and share rows via subgrid so swatch N aligns with
+   slider N. */
+.palette-body {
+  display: grid;
+  gap: var(--spacing-m);
+}
+
+.palette-swatch {
+  height: 8rem;
+  position: relative;
+}
+
+.swatch-gamut-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: oklch(0 0 0 / 0.55);
+  color: oklch(1 0 0);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Palette origin                                                     */
+/* ------------------------------------------------------------------ */
+
+.palette-origin {
+  grid-area: configuration;
+}
+
+/* Origin swatch — clickable preview that opens the hidden color picker */
+.origin-swatch {
+  width: 1rem;
+  margin: var(--spacing-xs);
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile: compact palette layout                                     */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 640px) {
+  /* ------------------------------------------------------------------ */
+  /* Side-by-side: swatches (left) + sliders (right), sharing rows      */
+  /* ------------------------------------------------------------------ */
+
+  .palette-body {
+    grid-template-columns: 5rem 1fr;
+    grid-template-rows: repeat(20, 2rem);
+    gap: 0 var(--spacing-xs);
+  }
+
+  /* Both grids span every row of the parent so items land in the same
+     implicit row track — subgrid passes those rows through. */
+  .palette-grid {
+    grid-row: 1 / -1;
+    grid-template-rows: subgrid;
+  }
+
+  /* Each swatch fills its shared subgrid row */
+  .palette-grid[data-palette-grid] .palette-swatch {
+    height: 100%;
+  }
+
+  /* Border between stacked slider rows instead of columns */
+  .palette-grid[data-editor="chroma"] step-slider:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid var(--border-default);
+  }
+}
