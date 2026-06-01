@@ -44,143 +44,145 @@ class PaletteToolbar extends HTMLElement {
           <a href="/farve/" style="text-decoration: none;" class="fs-m mr-auto text-mid"
             >A color palette generator</a
           >
-          <button
-            class="button"
-            @click=${() => {
-              toggleTheme();
-              this.#render();
-            }}
-          >
-            <svg class="icon" viewBox="0 0 24 24">
-              <use href=${theme === "dark" ? "#icon-sun" : "#icon-moon"} />
-            </svg>
-            ${theme === "dark" ? "Light" : "Dark"}
-          </button>
-          <button class="button" @click=${openPalettesPreview}>
-            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-eye" /></svg>
-            Preview
-          </button>
-          <button class="button" @click=${openExportDialog}>
-            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-export" /></svg>
-            Export
-          </button>
-          <button class="button" popovertarget="advanced-popover" aria-expanded="false">
-            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-advanced" /></svg>
-            Advanced
-          </button>
-          <div
-            id="advanced-popover"
-            class="advanced-popover border-default surface-raised shadow-dialog mt-xs p-m"
-            popover="auto"
-          >
-            ${popoverHeader("Advanced config", "#icon-advanced")}
-            <div class="stack gap-s">
-              <label class="p-2xs stack-horizontal items-center gap-xs  surface-raised">
-                <span class="label mr-auto"
-                  >Max chroma ${toolTip("max-chroma-tip", "Max chroma", maxChromaTip)}</span
-                >
-                <number-slider>
-                  <input
-                    id="max-chroma"
-                    class="input t-right"
-                    style="width: 10ch;"
-                    type="number"
-                    min="0.2"
-                    max="0.4"
-                    step="0.01"
-                    .value=${live(String(settings.maxChroma))}
-                    @input=${this.#onMaxChromaInput}
-                  />
-                </number-slider>
-              </label>
+          <div class="stack-horizontal gap-xs">
+            <button
+              class="button"
+              @click=${() => {
+                toggleTheme();
+                this.#render();
+              }}
+            >
+              <svg class="icon" viewBox="0 0 24 24">
+                <use href=${theme === "dark" ? "#icon-sun" : "#icon-moon"} />
+              </svg>
+              ${theme === "dark" ? "Light" : "Dark"}
+            </button>
+            <button class="button" @click=${openPalettesPreview}>
+              <svg class="icon" viewBox="0 0 24 24"><use href="#icon-eye" /></svg>
+              Preview
+            </button>
+            <button class="button" @click=${openExportDialog}>
+              <svg class="icon" viewBox="0 0 24 24"><use href="#icon-export" /></svg>
+              Export
+            </button>
+            <button class="button" popovertarget="advanced-popover" aria-expanded="false">
+              <svg class="icon" viewBox="0 0 24 24"><use href="#icon-advanced" /></svg>
+              Advanced
+            </button>
+            <div
+              id="advanced-popover"
+              class="advanced-popover border-default surface-raised shadow-dialog mt-xs p-m"
+              popover="auto"
+            >
+              ${popoverHeader("Advanced config", "#icon-advanced")}
+              <div class="stack gap-s">
+                <label class="p-2xs stack-horizontal items-center gap-xs  surface-raised">
+                  <span class="label mr-auto"
+                    >Max chroma ${toolTip("max-chroma-tip", "Max chroma", maxChromaTip)}</span
+                  >
+                  <number-slider>
+                    <input
+                      id="max-chroma"
+                      class="input t-right"
+                      style="width: 10ch;"
+                      type="number"
+                      min="0.2"
+                      max="0.4"
+                      step="0.01"
+                      .value=${live(String(settings.maxChroma))}
+                      @input=${this.#onMaxChromaInput}
+                    />
+                  </number-slider>
+                </label>
 
-              <div class="p-2xs surface-raised ">
-                <span class="label fs-s"
-                  >Target colorspace
-                  ${toolTip("target-colorspace-tip", "Target colorspace", ceilingTip)}</span
-                >
-                <div class="stack-horizontal gap-m mt-xs">
-                  ${CEILING_OPTIONS.map(
-                    (opt) => html`
-                      <label class="stack-horizontal gap-2xs fs-xs" style="cursor: pointer;">
-                        <input
-                          type="radio"
-                          class="radio"
-                          name="ceilingGamut"
-                          value="${opt.value}"
-                          .checked=${settings.ceilingGamut === opt.value}
-                          @change=${this.#onCeilingChange}
-                        />
-                        ${opt.label}
-                      </label>
-                    `,
-                  )}
+                <div class="p-2xs surface-raised ">
+                  <span class="label fs-s"
+                    >Target colorspace
+                    ${toolTip("target-colorspace-tip", "Target colorspace", ceilingTip)}</span
+                  >
+                  <div class="stack-horizontal gap-m mt-xs">
+                    ${CEILING_OPTIONS.map(
+                      (opt) => html`
+                        <label class="stack-horizontal gap-2xs fs-xs" style="cursor: pointer;">
+                          <input
+                            type="radio"
+                            class="radio"
+                            name="ceilingGamut"
+                            value="${opt.value}"
+                            .checked=${settings.ceilingGamut === opt.value}
+                            @change=${this.#onCeilingChange}
+                          />
+                          ${opt.label}
+                        </label>
+                      `,
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <label class="p-2xs stack-horizontal items-center gap-xs  surface-raised">
-                <span class="label mr-auto"
-                  >Linked edit strength
-                  ${toolTip("spread-tip", "Linked edit strength", spreadTip)}</span
-                >
-                <number-slider>
-                  <input
-                    id="propagate-decay"
-                    class="input t-right"
-                    style="width: 10ch;"
-                    type="number"
-                    min="0.1"
-                    max="0.9"
-                    step="0.05"
-                    .value=${live(String(settings.propagateDecay))}
-                    @input=${this.#onPropagateDecayInput}
-                  />
-                </number-slider>
-              </label>
+                <label class="p-2xs stack-horizontal items-center gap-xs  surface-raised">
+                  <span class="label mr-auto"
+                    >Linked edit strength
+                    ${toolTip("spread-tip", "Linked edit strength", spreadTip)}</span
+                  >
+                  <number-slider>
+                    <input
+                      id="propagate-decay"
+                      class="input t-right"
+                      style="width: 10ch;"
+                      type="number"
+                      min="0.1"
+                      max="0.9"
+                      step="0.05"
+                      .value=${live(String(settings.propagateDecay))}
+                      @input=${this.#onPropagateDecayInput}
+                    />
+                  </number-slider>
+                </label>
 
-              <label class="p-2xs stack-horizontal items-center gap-xs  surface-raised">
-                <span class="label mr-auto"
-                  >Curve smoothness
-                  ${toolTip("chroma-smooth-tip", "Curve smoothness", chromaSmoothTip)}</span
-                >
-                <number-slider>
-                  <input
-                    id="chroma-smooth"
-                    class="input t-right"
-                    style="width: 10ch;"
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    .value=${live(String(settings.chromaSmoothFactor))}
-                    @input=${this.#onChromaSmoothInput}
-                  />
-                </number-slider>
-              </label>
+                <label class="p-2xs stack-horizontal items-center gap-xs  surface-raised">
+                  <span class="label mr-auto"
+                    >Curve smoothness
+                    ${toolTip("chroma-smooth-tip", "Curve smoothness", chromaSmoothTip)}</span
+                  >
+                  <number-slider>
+                    <input
+                      id="chroma-smooth"
+                      class="input t-right"
+                      style="width: 10ch;"
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      .value=${live(String(settings.chromaSmoothFactor))}
+                      @input=${this.#onChromaSmoothInput}
+                    />
+                  </number-slider>
+                </label>
 
-              <div class="stack gap-2xs p-2xs surface-raised ">
-                <span class="label fs-s">Steps</span>
-                <div class="stack-horizontal gap-xs items-start">
-                  <input
-                    class="input flex-1 fs-xs"
-                    type="text"
-                    placeholder="0,100,200,300,400"
-                    .value=${this.#stepsDraft ?? settings.steps.join(",")}
-                    @input=${this.#onStepsInput}
-                    @keydown=${this.#onStepsKeydown}
-                  />
+                <div class="stack gap-2xs p-2xs surface-raised ">
+                  <span class="label fs-s">Steps</span>
+                  <div class="stack-horizontal gap-xs items-start">
+                    <input
+                      class="input flex-1 fs-xs"
+                      type="text"
+                      placeholder="0,100,200,300,400"
+                      .value=${this.#stepsDraft ?? settings.steps.join(",")}
+                      @input=${this.#onStepsInput}
+                      @keydown=${this.#onStepsKeydown}
+                    />
+                  </div>
+                  <div class="stack-horizontal gap-xs">
+                    <button class="button " @click=${this.#onStepsReset}>Reset</button>
+                    <button class="button flex-1" @click=${this.#onStepsSave}>Save</button>
+                  </div>
+                  ${this.#stepsError
+                    ? html`<span class="fs-xs" style="color: var(--gamut-warning)"
+                        >${this.#stepsError}</span
+                      >`
+                    : html`<span class="fs-xs text-low mt-xs"
+                        >Comma-separated step names. ${settings.steps.length} steps currently.</span
+                      >`}
                 </div>
-                <div class="stack-horizontal gap-xs">
-                  <button class="button " @click=${this.#onStepsReset}>Reset</button>
-                  <button class="button flex-1" @click=${this.#onStepsSave}>Save</button>
-                </div>
-                ${this.#stepsError
-                  ? html`<span class="fs-xs" style="color: var(--gamut-warning)"
-                      >${this.#stepsError}</span
-                    >`
-                  : html`<span class="fs-xs text-low mt-xs"
-                      >Comma-separated step names. ${settings.steps.length} steps currently.</span
-                    >`}
               </div>
             </div>
           </div>

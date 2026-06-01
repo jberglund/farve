@@ -55,7 +55,7 @@ class PalettePanel extends HTMLElement {
     render(
       html`
         <section class="stack gap-l">
-          <div class=" stack-horizontal gap-s items-end">
+          <div class="stack-horizontal gap-s gap-row-xs items-end">
             <label class="stack gap-2xs flex-1" for="palette-name-${this.#paletteId}">
               <div class="label">Name</div>
               <input
